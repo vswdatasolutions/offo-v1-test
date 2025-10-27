@@ -7,10 +7,10 @@ interface PaymentMethodsScreenProps {
 }
 
 const upiApps = {
-    'Phone Pe': 'https://i.imgur.com/QnkYdbM.png',
-    'Google Pay': 'https://i.imgur.com/r4S1eDD.png',
-    'Paytm': 'https://i.imgur.com/uPiOB06.png',
-    'Generic': 'https://i.imgur.com/22aF06F.png', // A generic UPI icon
+    'Phone Pe': '../../assets/icons/phone pe.jpeg',
+    'Google Pay': '../../assets/icons/g_pay.png',
+    'Paytm': '../../assets/icons/paytm.jpg',
+     // A generic UPI icon
 };
 
 const getUpiIcon = (upiId: string) => {
@@ -27,7 +27,7 @@ interface UpiMethod {
 
 const PaymentMethodsScreen: React.FC<PaymentMethodsScreenProps> = ({ navigateTo }) => {
     const [methods, setMethods] = useState<UpiMethod[]>([
-        { id: 1, upiId: 'johndoe@ybl' },
+        { id: 1, upiId: 'jairaj@ybl' },
         { id: 2, upiId: '9876543210@paytm' },
     ]);
     const [showAddModal, setShowAddModal] = useState(false);

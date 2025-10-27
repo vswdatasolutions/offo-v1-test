@@ -29,7 +29,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
     if (step < onboardingSteps.length - 1) {
       const timer = setTimeout(() => {
         setStep(prevStep => prevStep + 1);
-      }, 2000); // Auto-advance every 3 seconds
+      }, 2000); // Auto-advance every 2 seconds
       
       return () => clearTimeout(timer);
     }
