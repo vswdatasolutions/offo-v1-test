@@ -10,9 +10,9 @@ interface PaymentScreenProps {
 }
 
 const paymentMethods = [
-    { name: 'Phone Pe', icon: 'https://i.imgur.com/QnkYdbM.png' },
-    { name: 'Google Pay', icon: 'https://i.imgur.com/r4S1eDD.png' },
-    { name: 'Paytm', icon: 'https://i.imgur.com/uPiOB06.png' }
+    { name: 'Phone Pe', icon: '../../assets/icons/phone pe.jpeg' },
+    { name: 'Google Pay', icon: '../../assets/icons/g_pay.png' },
+    { name: 'Paytm', icon: '../../assets/icons/paytm.png' }
 ];
 
 const PaymentScreen: React.FC<PaymentScreenProps> = ({ orderDetails, setOrderDetails, navigateTo }) => {
