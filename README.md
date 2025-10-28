@@ -19,3 +19,18 @@ View your app in AI Studio: https://ai.studio/apps/drive/1SyzSj0quWzJg0ItcHaKcUo
 3. Run the app:
    `npm run dev`
 # offo
+
+
+
+# OFFO Frontend
+
+A mobile-first web application for office cafeteria food ordering.
+
+## Tech Stack
+- React 19
+- TypeScript
+- Tailwind CSS
+- Vite
+
+## Environment Setup
+Create a `.env` file in the root:
