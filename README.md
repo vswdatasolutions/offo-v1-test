@@ -36,3 +36,4 @@ A mobile-first web application for office cafeteria food ordering.
 Create a `.env` file in the root:
 # offo
 # offo-save--time-
+# OFFO--Order-Food-From-Office
