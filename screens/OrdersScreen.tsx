@@ -16,11 +16,34 @@ interface Order {
     date: string;
     items: OrderItem[];
     total: number;
-    status: 'Delivered' | 'Cancelled' | 'Ongoing';
+    status: 'Delivered' | 'Cancelled' | 'Ongoing' | 'Scheduled' | 'Preparing' | 'Ready to Take';
     placedAt: Date;
 }
 
 const mockOrders: Order[] = [
+    {
+        id: 'ODS56781',
+        cafe: 'Cozy Corner',
+        date: '28 Jun 2024, 01:00 PM',
+        items: [
+            { item: FOOD_ITEMS[8], quantity: 1 }, // Paneer Biryani
+            { item: FOOD_ITEMS[2], quantity: 1 }, // Hot Coffee
+        ],
+        total: FOOD_ITEMS[8].price + FOOD_ITEMS[2].price,
+        status: 'Scheduled',
+        placedAt: new Date(),
+    },
+    {
+        id: 'ODS56782',
+        cafe: 'Fresh Bites',
+        date: '30 Jun 2024, 12:00 PM',
+        items: [
+            { item: FOOD_ITEMS[3], quantity: 2 }, // Green Salad
+        ],
+        total: FOOD_ITEMS[3].price * 2,
+        status: 'Scheduled',
+        placedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Placed yesterday
+    },
     {
         id: 'OD12349',
         cafe: 'Urban Roast',
@@ -31,6 +54,39 @@ const mockOrders: Order[] = [
         total: FOOD_ITEMS[2].price * 2,
         status: 'Ongoing',
         placedAt: new Date(Date.now() - 2 * 60 * 1000), // Placed 2 minutes ago for testing
+    },
+    {
+        id: 'OD12350',
+        cafe: 'Caffeine Fix',
+        date: '26 Jun 2024, 10:25 AM',
+        items: [
+            { item: FOOD_ITEMS[9], quantity: 1 }, // Chicken Burger
+        ],
+        total: FOOD_ITEMS[9].price,
+        status: 'Preparing',
+        placedAt: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+    },
+    {
+        id: 'OD12351',
+        cafe: 'Cozy Corner',
+        date: '26 Jun 2024, 10:20 AM',
+        items: [
+            { item: FOOD_ITEMS[1], quantity: 1 }, // Chicken Tikka Fry
+        ],
+        total: FOOD_ITEMS[1].price,
+        status: 'Ready to Take',
+        placedAt: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+    },
+    {
+        id: 'OD12352',
+        cafe: 'Fresh Bites',
+        date: '26 Jun 2024, 10:30 AM',
+        items: [
+            { item: FOOD_ITEMS[7], quantity: 1 }, // South Meals
+        ],
+        total: FOOD_ITEMS[7].price,
+        status: 'Preparing',
+        placedAt: new Date(Date.now() - 3 * 60 * 1000), // 3 mins ago
     },
     {
         id: 'OD12345',
@@ -88,17 +144,28 @@ interface OrdersScreenProps {
 
 const OrderStatusPill: React.FC<{ status: string }> = ({ status }) => {
   const baseClasses = "text-xs font-semibold px-2.5 py-1 rounded-full";
-  if (status === 'Delivered') {
-    return <span className={`${baseClasses} bg-green-100 text-green-800`}>{status}</span>;
+  const isBlinking = status === 'Ongoing' || status === 'Scheduled' || status === 'Preparing' || status === 'Ready to Take';
+  const blinkingClass = isBlinking ? 'animate-blink' : '';
+
+  switch (status) {
+    case 'Delivered':
+      return <span className={`${baseClasses} bg-green-100 text-green-800`}>{status}</span>;
+    case 'Cancelled':
+      return <span className={`${baseClasses} bg-red-100 text-red-800`}>{status}</span>;
+    case 'Scheduled':
+      return <span className={`${baseClasses} ${blinkingClass} bg-blue-100 text-blue-800`}>{status}</span>;
+    case 'Preparing':
+        return <span className={`${baseClasses} ${blinkingClass} bg-orange-100 text-orange-800`}>{status}</span>;
+    case 'Ready to Take':
+        return <span className={`${baseClasses} ${blinkingClass} bg-purple-100 text-purple-800`}>Ready to Take</span>;
+    case 'Ongoing':
+    default:
+      return <span className={`${baseClasses} ${blinkingClass} bg-yellow-100 text-yellow-800`}>{status}</span>;
   }
-  if (status === 'Cancelled') {
-    return <span className={`${baseClasses} bg-red-100 text-red-800`}>{status}</span>;
-  }
-  return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{status}</span>;
 };
 
 const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
-  const [activeTab, setActiveTab] = useState<'ongoing' | 'past'>('past');
+  const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('ongoing');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
@@ -121,10 +188,15 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
     setOrderToCancel(null);
   };
 
-  const ongoingOrders = orders.filter(o => o.status === 'Ongoing');
-  const pastOrders = orders.filter(o => o.status !== 'Ongoing');
+  const scheduledOrders = orders.filter(o => o.status === 'Scheduled');
+  const ongoingOrders = orders.filter(o => o.status === 'Ongoing' || o.status === 'Preparing' || o.status === 'Ready to Take');
+  const pastOrders = orders.filter(o => o.status === 'Delivered' || o.status === 'Cancelled');
 
-  const ordersToDisplay = activeTab === 'ongoing' ? ongoingOrders : pastOrders;
+  const ordersToDisplay = activeTab === 'scheduled'
+      ? scheduledOrders
+      : activeTab === 'ongoing'
+      ? ongoingOrders
+      : pastOrders;
 
 
   return (
@@ -155,14 +227,20 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
       
       <div className="flex border-b">
         <button
+          onClick={() => setActiveTab('scheduled')}
+          className={`w-1/3 py-3 text-center font-semibold transition-colors ${activeTab === 'scheduled' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+        >
+          Scheduled
+        </button>
+        <button
           onClick={() => setActiveTab('ongoing')}
-          className={`w-1/2 py-3 text-center font-semibold transition-colors ${activeTab === 'ongoing' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+          className={`w-1/3 py-3 text-center font-semibold transition-colors ${activeTab === 'ongoing' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
         >
           Ongoing
         </button>
         <button
           onClick={() => setActiveTab('past')}
-          className={`w-1/2 py-3 text-center font-semibold transition-colors ${activeTab === 'past' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+          className={`w-1/3 py-3 text-center font-semibold transition-colors ${activeTab === 'past' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
         >
           Past Orders
         </button>
@@ -171,7 +249,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
       <main className="flex-grow overflow-y-auto p-4 space-y-4 no-scrollbar">
         {ordersToDisplay.length > 0 ? (
           ordersToDisplay.map(order => {
-            const isCancellable = order.status === 'Ongoing' && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000;
+            const isCancellable = (order.status === 'Ongoing' && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000) || order.status === 'Scheduled';
 
             return (
             <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border transition-all duration-300">
@@ -220,7 +298,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
                         Cancel Order
                     </button>
                  )}
-                 {order.status !== 'Cancelled' && (
+                 {order.status === 'Delivered' && (
                     <button className="text-sm font-semibold text-orange-600 bg-orange-100 px-4 py-2 rounded-lg hover:bg-orange-200">
                         Reorder
                     </button>
@@ -232,10 +310,12 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
         ) : (
             <div className="text-center pt-20">
                 <p className="text-gray-500 text-lg">
-                    {activeTab === 'ongoing' ? 'No ongoing orders.' : 'No past orders found.'}
+                    {activeTab === 'ongoing' ? 'No ongoing orders.' : 
+                     activeTab === 'scheduled' ? 'No scheduled orders.' : 'No past orders found.'}
                 </p>
                 <p className="text-gray-400 mt-2">
-                    {activeTab === 'ongoing' ? 'Active orders will appear here.' : 'Your previous orders will be shown here.'}
+                    {activeTab === 'ongoing' ? 'Active orders will appear here.' : 
+                     activeTab === 'scheduled' ? 'Your future scheduled orders will appear here.' : 'Your previous orders will be shown here.'}
                 </p>
             </div>
         )}
