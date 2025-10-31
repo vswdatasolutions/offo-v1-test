@@ -8,8 +8,7 @@ interface PaymentMethodsScreenProps {
 
 const upiApps = {
     'Phone Pe': '../../assets/icons/phone pe.jpeg',
-    'Google Pay': '../../assets/icons/g_pay.png',
-    'Paytm': '../../assets/icons/paytm.jpg',
+   
      // A generic UPI icon
 };
 

@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import type { Screen } from '../App';
-import type { OrderDetails } from '../types';
+import type { OrderDetails, ScheduledItem } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
+import TimePicker from '../components/TimePicker';
+import ScrollableContainer from '@/components/ScrollableContainer';
 
 interface ScheduleScreenProps {
   orderDetails: OrderDetails;
@@ -12,10 +14,8 @@ interface ScheduleScreenProps {
 const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderDetails, navigateTo }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [hour, setHour] = useState('08');
-  const [minute, setMinute] = useState('00');
-  const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
-  const [repeat, setRepeat] = useState('Weekly');
+  const [scheduleTime, setScheduleTime] = useState('08:00 AM');
+  const [repeat, setRepeat] = useState<'none' | 'weekly' | 'monthly'>('none');
 
   const calendarGrid = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -57,119 +57,139 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
 
     if (clickedDate < today) return;
 
-    setSelectedDates(prevDates => {
-      const isSelected = prevDates.some(d => isSameDay(d, clickedDate));
+    setSelectedDates(prevSelected => {
+      const isSelected = prevSelected.some(d => isSameDay(d, clickedDate));
       if (isSelected) {
-        return prevDates.filter(d => !isSameDay(d, clickedDate));
+        return prevSelected.filter(d => !isSameDay(d, clickedDate));
       } else {
-        return [...prevDates, clickedDate].sort((a, b) => a.getTime() - b.getTime());
+        return [...prevSelected, clickedDate].sort((a, b) => a.getTime() - b.getTime());
       }
     });
   };
-  
+
   const handleCheckout = () => {
     if (selectedDates.length === 0) {
       alert("Please select at least one date.");
       return;
     }
-    const scheduledDate = selectedDates[0];
+    
+    const schedules: ScheduledItem[] = selectedDates.map(date => ({
+        id: date.getTime(),
+        date: date,
+        time: scheduleTime,
+    }));
+    
+    const total = (orderDetails.subtotal + orderDetails.convenienceFee) * schedules.length;
     setOrderDetails({
         ...orderDetails,
-        scheduledDate: scheduledDate,
-        scheduledTime: `${hour}:${minute} ${period}`
+        schedules: schedules,
+        total,
     });
     navigateTo('payment');
   }
-
-  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
-  const minutes = ['00', '15', '30', '45'];
   
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatSelectedDates = (dates: Date[]) => {
+    if (dates.length === 0) return 'None';
+    const sortedDays = dates.map(d => d.getDate()).sort((a,b) => a - b);
+    if (sortedDays.length <= 5) {
+      return sortedDays.join(', ');
+    }
+    const firstPart = sortedDays.slice(0, 4).join(', ');
+    const remainingCount = sortedDays.length - 4;
+    return `${firstPart},... +${remainingCount}`;
   };
 
   return (
     <div className="flex flex-col h-full bg-[#FFF9F2]">
-      <header className="p-4 flex items-center border-b">
-        <button onClick={() => navigateTo('cart')}>
+      <header className="p-4 flex items-center">
+        <button onClick={() => navigateTo('cart')} className="p-2">
           <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-xl font-bold text-gray-800 mx-auto">Schedule Order</h1>
+        <h1 className="text-2xl font-bold text-gray-800 flex-grow text-center">Schedule Order</h1>
+        <div className="w-10"></div> {/* Spacer */}
       </header>
 
-      <main className="flex-grow p-4 overflow-y-auto">
-        <p className="font-semibold text-center mb-4">Please select date and time</p>
+      <ScrollableContainer className="p-4">
+        <p className="font-semibold text-center mb-4 text-gray-700">Please select date and time</p>
         
-        <div className="text-center mb-4">
-            <div className="flex justify-between items-center font-bold text-gray-700 px-2">
-                <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-200">&lt;</button>
-                <span>{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-200">&gt;</button>
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <div className="flex justify-between items-center mb-4 px-2">
+              <h2 className="text-lg font-bold text-orange-500">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })} ›</h2>
+              <div className="flex space-x-2">
+                <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </div>
+          </div>
+          <div className="grid grid-cols-7 gap-y-2 text-center">
+              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => <div key={day} className="font-semibold text-gray-400 text-xs py-2">{day}</div>)}
+              {calendarGrid.map((day, index) => {
+                  const date = day ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day) : null;
+                  const isPast = date && date < today;
+                  const isSelected = date && selectedDates.some(d => isSameDay(d, date));
+                  const isToday = date && isSameDay(date, today);
+
+                  return (
+                      <button 
+                          key={index}
+                          disabled={isPast || !day}
+                          onClick={() => handleDateClick(day)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto font-medium transition-colors duration-200
+                            ${!day ? 'bg-transparent' : ''}
+                            ${isPast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700'}
+                            ${isSelected ? 'bg-orange-500 text-white font-bold shadow-md' : ''}
+                            ${!isSelected && isToday ? 'border border-orange-500 text-orange-500' : ''}
+                          `}
+                      >
+                          {day}
+                      </button>
+                  )
+              })}
+          </div>
+          <div className="border-t mt-4 pt-4">
+             <TimePicker value={scheduleTime} onChange={setScheduleTime} />
+          </div>
+        </div>
+
+        <div className="mt-6">
+            <h3 className="font-bold text-lg text-gray-700 mb-3 px-2">Repeat</h3>
+            <div className="flex items-center bg-gray-100 p-1 rounded-full shadow-inner">
+                {(['None', 'Weekly', 'Monthly'] as const).map((option) => {
+                    const value = option.toLowerCase() as 'none' | 'weekly' | 'monthly';
+                    return (
+                        <button
+                            key={option}
+                            onClick={() => setRepeat(value)}
+                            className={`flex-1 py-2 text-center font-semibold rounded-full transition-all duration-300 text-sm ${
+                                repeat === value
+                                ? 'bg-orange-500 text-white shadow'
+                                : 'text-gray-600'
+                            }`}
+                        >
+                            {option}
+                        </button>
+                    );
+                })}
             </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-sm mb-4">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => <div key={day} className="font-bold text-gray-500 w-10 h-10 flex items-center justify-center">{day}</div>)}
-            {calendarGrid.map((day, index) => {
-                const date = day ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day) : null;
-                const isPast = date && date < today;
-                const isSelected = date && selectedDates.some(d => isSameDay(d, date));
-                const isToday = date && isSameDay(date, today);
-
-                return (
-                    <button 
-                        key={index}
-                        disabled={isPast || !day}
-                        onClick={() => handleDateClick(day)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors
-                          ${!day ? 'bg-transparent' : ''}
-                          ${isPast ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-orange-100'}
-                          ${isSelected ? 'bg-orange-500 text-white hover:bg-orange-600' : ''}
-                          ${!isSelected && isToday ? 'font-bold border-2 border-orange-500' : ''}
-                        `}
-                    >
-                        {day}
-                    </button>
-                )
-            })}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label className="text-sm font-semibold text-gray-600">Time</label>
-                <div className="flex items-center bg-white border rounded-lg p-1 mt-1">
-                    <select value={hour} onChange={(e) => setHour(e.target.value)} className="w-full bg-transparent p-1 focus:outline-none appearance-none text-center">
-                        {hours.map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <span>:</span>
-                     <select value={minute} onChange={(e) => setMinute(e.target.value)} className="w-full bg-transparent p-1 focus:outline-none appearance-none text-center">
-                        {minutes.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <div className="flex flex-col">
-                      <button onClick={() => setPeriod('AM')} className={`px-2 py-0.5 text-xs rounded ${period === 'AM' ? 'bg-orange-500 text-white' : 'text-gray-500'}`}>AM</button>
-                      <button onClick={() => setPeriod('PM')} className={`px-2 py-0.5 text-xs rounded ${period === 'PM' ? 'bg-orange-500 text-white' : 'text-gray-500'}`}>PM</button>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label className="text-sm font-semibold text-gray-600">Repeat</label>
-                <select value={repeat} onChange={(e) => setRepeat(e.target.value)} className="w-full bg-white border rounded-lg p-2 mt-1 focus:outline-none">
-                    <option>Daily</option>
-                    <option>Weekly</option>
-                    <option>Monthly</option>
-                    <option>None</option>
-                </select>
-            </div>
-        </div>
-      </main>
+        {selectedDates.length > 0 && (
+          <div className="mt-6 bg-[#6F4E37] p-4 rounded-2xl text-white font-semibold space-y-1 shadow-lg animate-fade-in">
+            <p>Selected dates : {formatSelectedDates(selectedDates)}</p>
+            <p>Selected time : {scheduleTime}</p>
+            {repeat !== 'none' && <p>Repeat : <span className="capitalize">{repeat}</span></p>}
+          </div>
+        )}
+      </ScrollableContainer>
 
       <footer className="p-4 border-t bg-white">
-        <div className="bg-orange-50 text-gray-800 p-4 rounded-lg mb-4">
-            <p className="font-bold text-sm mb-1">Summary</p>
-            <p><span className="font-semibold">Dates:</span> {selectedDates.length > 0 ? selectedDates.map(formatDate).join(', ') : 'None'}</p>
-            <p><span className="font-semibold">Time:</span> {hour}:{minute} {period}</p>
-            <p><span className="font-semibold">Repeat:</span> {repeat}</p>
-        </div>
         <button
           onClick={handleCheckout}
           disabled={selectedDates.length === 0}
