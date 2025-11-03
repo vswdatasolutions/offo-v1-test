@@ -1,23 +1,13 @@
 import React, { useState } from 'react';
 import type { Screen } from '../App';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface PaymentMethodsScreenProps {
   navigateTo: (screen: Screen) => void;
 }
 
-const upiApps = {
-    'Phone Pe': '../../assets/icons/phone pe.jpeg',
-   
-     // A generic UPI icon
-};
-
-const getUpiIcon = (upiId: string) => {
-    if (upiId.includes('ybl') || upiId.includes('ibl')) return upiApps['Phone Pe'];
-    if (upiId.includes('okicici') || upiId.includes('okhdfcbank')) return upiApps['Google Pay'];
-    if (upiId.includes('paytm')) return upiApps['Paytm'];
-    return upiApps['Generic'];
-}
+const phonePeIconUrl = 'https://i.imgur.com/QnkYdbM.png';
 
 interface UpiMethod {
     id: number;
@@ -26,7 +16,7 @@ interface UpiMethod {
 
 const PaymentMethodsScreen: React.FC<PaymentMethodsScreenProps> = ({ navigateTo }) => {
     const [methods, setMethods] = useState<UpiMethod[]>([
-        { id: 1, upiId: 'jairaj@ybl' },
+        { id: 1, upiId: 'johndoe@ybl' },
         { id: 2, upiId: '9876543210@paytm' },
     ]);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -73,18 +63,18 @@ const PaymentMethodsScreen: React.FC<PaymentMethodsScreenProps> = ({ navigateTo 
                     </button>
                 </div>
                 <div className="w-3/5 text-center">
-                    <h1 className="text-xl font-bold text-gray-800">Payment Methods</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Phone Pe UPI IDs</h1>
                 </div>
                 <div className="w-1/5"></div>
             </header>
 
-            <main className="flex-grow overflow-y-auto p-4 space-y-3">
-                 <h2 className="font-bold text-lg text-gray-800 my-2">Saved UPI IDs</h2>
+            <ScrollableContainer className="p-4 space-y-3">
+                 <h2 className="font-bold text-lg text-gray-800 my-2">Saved Phone Pe UPI IDs</h2>
                  {methods.length > 0 ? (
                     methods.map(method => (
                         <div key={method.id} className="bg-white p-4 rounded-xl shadow-sm border flex items-center justify-between">
                             <div className="flex items-center">
-                                <img src={getUpiIcon(method.upiId)} alt="UPI" className="h-8 w-auto mr-4" />
+                                <img src={phonePeIconUrl} alt="Phone Pe" className="h-8 w-auto mr-4" />
                                 <span className="font-semibold text-gray-700">{method.upiId}</span>
                             </div>
                             <button onClick={() => handleRemove(method.id)} className="text-sm font-semibold text-red-500">
@@ -97,7 +87,7 @@ const PaymentMethodsScreen: React.FC<PaymentMethodsScreenProps> = ({ navigateTo 
                         <p className="text-gray-500">No saved payment methods.</p>
                     </div>
                  )}
-            </main>
+            </ScrollableContainer>
 
             <footer className="p-4 border-t bg-white">
                 <button 

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { Screen } from '../App';
 import type { CartItem, OrderDetails } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface CartScreenProps {
   cart: CartItem[];
@@ -126,7 +128,7 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
       )}
       <header className="p-4 flex items-center border-b">
         <div className="w-1/5">
-          <button onClick={() => cart.length > 0 ? navigateTo('menu') : navigateTo('home')}>
+          <button onClick={() => navigateTo('home')}>
             <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
           </button>
         </div>
@@ -138,7 +140,7 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
         </div>
       </header>
       
-      <main className="flex-grow overflow-y-auto p-4 space-y-3">
+      <ScrollableContainer className="p-4 space-y-3">
         {cart.map(({ item, quantity }) => (
           <div 
             key={item.id} 
@@ -163,7 +165,12 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
             </div>
           </div>
         ))}
-      </main>
+        <div className="pt-2">
+            <button onClick={() => navigateTo('home')} className="w-full text-center py-3 border-2 border-dashed border-orange-400 text-orange-600 font-semibold rounded-xl hover:bg-orange-50 transition-colors">
+              + Add More Items
+            </button>
+        </div>
+      </ScrollableContainer>
 
       {cart.length > 0 && (
         <footer className="bg-white p-4 border-t rounded-t-2xl">

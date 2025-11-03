@@ -3,7 +3,7 @@ import type { Screen } from '../App';
 import type { OrderDetails, ScheduledItem } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import TimePicker from '../components/TimePicker';
-import ScrollableContainer from '@/components/ScrollableContainer';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface ScheduleScreenProps {
   orderDetails: OrderDetails;
@@ -13,6 +13,7 @@ interface ScheduleScreenProps {
 
 const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderDetails, navigateTo }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [initialSelectedDates, setInitialSelectedDates] = useState<Date[]>([]);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [scheduleTime, setScheduleTime] = useState('08:00 AM');
   const [repeat, setRepeat] = useState<'none' | 'weekly' | 'monthly'>('none');
@@ -57,14 +58,88 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
 
     if (clickedDate < today) return;
 
-    setSelectedDates(prevSelected => {
-      const isSelected = prevSelected.some(d => isSameDay(d, clickedDate));
-      if (isSelected) {
-        return prevSelected.filter(d => !isSameDay(d, clickedDate));
-      } else {
-        return [...prevSelected, clickedDate].sort((a, b) => a.getTime() - b.getTime());
+    const newInitialDates = initialSelectedDates.some(d => isSameDay(d, clickedDate))
+        ? initialSelectedDates.filter(d => !isSameDay(d, clickedDate))
+        : [...initialSelectedDates, clickedDate];
+    
+    newInitialDates.sort((a, b) => a.getTime() - b.getTime());
+    
+    setInitialSelectedDates(newInitialDates);
+    setSelectedDates(newInitialDates);
+    setRepeat('none');
+  };
+  
+  const handleClearSelection = () => {
+    setSelectedDates([]);
+    setInitialSelectedDates([]);
+    setRepeat('none');
+  };
+
+  // Helper function to find the Nth weekday of a month
+  const findNthWeekdayOfMonth = (year: number, month: number, dayOfWeek: number, n: number): Date | null => {
+      const firstDayOfMonth = new Date(year, month, 1);
+      let count = 0;
+      for (let day = 1; day <= 31; day++) {
+          const currentDate = new Date(year, month, day);
+          if (currentDate.getMonth() !== month) break; // Past the end of the month
+          if (currentDate.getDay() === dayOfWeek) {
+              count++;
+              if (count === n) {
+                  return currentDate;
+              }
+          }
       }
-    });
+      return null;
+  };
+
+  const handleRepeatChange = (newRepeat: 'none' | 'weekly' | 'monthly') => {
+    setRepeat(newRepeat);
+
+    if (initialSelectedDates.length === 0) return;
+
+    if (newRepeat === 'none') {
+        setSelectedDates([...initialSelectedDates]);
+        return;
+    }
+
+    // FIX: Explicitly typing `newDatesSet` as `Set<number>` ensures that TypeScript
+    // correctly infers the type of its elements, preventing `unknown` type errors
+    // when creating new Date objects from the set's values later on.
+    const newDatesSet = new Set<number>(initialSelectedDates.map(d => d.getTime()));
+    
+    if (newRepeat === 'weekly') {
+        const originalSelectedDaysOfWeek = [...new Set(initialSelectedDates.map(d => d.getDay()))];
+        // The array is already sorted, so the last element is the latest date.
+        // This avoids a TypeScript type inference issue with Math.max(...).
+        const lastSelectedDate = initialSelectedDates[initialSelectedDates.length - 1];
+        const year = lastSelectedDate.getFullYear();
+        const month = lastSelectedDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateInMonth = new Date(year, month, day);
+            if (dateInMonth >= today && originalSelectedDaysOfWeek.includes(dateInMonth.getDay())) {
+                newDatesSet.add(dateInMonth.getTime());
+            }
+        }
+    }
+
+    if (newRepeat === 'monthly') {
+        initialSelectedDates.forEach(date => {
+            const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ...
+            const n = Math.floor((date.getDate() - 1) / 7) + 1; // 1st, 2nd, 3rd... occurrence
+
+            for (let i = 1; i <= 2; i++) { // For the next 2 months
+                const nextMonthDate = findNthWeekdayOfMonth(date.getFullYear(), date.getMonth() + i, dayOfWeek, n);
+                if (nextMonthDate && nextMonthDate >= today) {
+                    newDatesSet.add(nextMonthDate.getTime());
+                }
+            }
+        });
+    }
+    
+    const sortedDates = Array.from(newDatesSet).map(t => new Date(t)).sort((a, b) => a.getTime() - b.getTime());
+    setSelectedDates(sortedDates);
   };
 
   const handleCheckout = () => {
@@ -92,9 +167,9 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
     if (dates.length === 0) return 'None';
     const sortedDays = dates.map(d => d.getDate()).sort((a,b) => a - b);
     if (sortedDays.length <= 5) {
-      return sortedDays.join(', ');
+      return dates.map(d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short'})).join(', ');
     }
-    const firstPart = sortedDays.slice(0, 4).join(', ');
+    const firstPart = dates.slice(0, 4).map(d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short'})).join(', ');
     const remainingCount = sortedDays.length - 4;
     return `${firstPart},... +${remainingCount}`;
   };
@@ -166,7 +241,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
                     return (
                         <button
                             key={option}
-                            onClick={() => setRepeat(value)}
+                            onClick={() => handleRepeatChange(value)}
                             className={`flex-1 py-2 text-center font-semibold rounded-full transition-all duration-300 text-sm ${
                                 repeat === value
                                 ? 'bg-orange-500 text-white shadow'
@@ -179,6 +254,17 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
                 })}
             </div>
         </div>
+        
+        {initialSelectedDates.length > 0 && (
+          <div className="mt-4 text-center">
+              <button 
+                  onClick={handleClearSelection}
+                  className="text-sm text-red-500 font-semibold hover:underline"
+              >
+                  Clear All Selections
+              </button>
+          </div>
+        )}
 
         {selectedDates.length > 0 && (
           <div className="mt-6 bg-[#6F4E37] p-4 rounded-2xl text-white font-semibold space-y-1 shadow-lg animate-fade-in">
