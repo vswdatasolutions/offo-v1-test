@@ -102,6 +102,7 @@ const App: React.FC = () => {
         return <SuccessScreen 
                   navigateTo={navigateTo}
                   clearCart={clearCart}
+                  orderDetails={orderDetails}
                 />;
       case 'orders':
         return <OrdersScreen navigateTo={navigateTo} />;
@@ -121,8 +122,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-800 flex justify-center items-start min-h-screen py-4 sm:py-8">
-      <div className="w-full max-w-sm h-[850px] sm:h-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden relative">
+    <div className="bg-gray-100 sm:bg-gray-800 flex justify-center items-center h-screen">
+      <div className="w-full h-full sm:max-w-sm sm:h-[850px] bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden relative">
         {renderScreen()}
       </div>
     </div>

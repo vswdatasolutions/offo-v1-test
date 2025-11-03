@@ -4,6 +4,7 @@ import type { CartItem, FoodItem, Cafe } from '../types';
 import { CAFES, FOOD_ITEMS } from '../constants';
 import BottomNav from '../components/BottomNav';
 import CartIcon from '../components/icons/CartIcon';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface HomeScreenProps {
   location: { city: string, company: string, building: string };
@@ -14,7 +15,7 @@ interface HomeScreenProps {
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, addToCart, setSelectedCafe }) => {
-  const [isVeg, setIsVeg] = useState(false);
+  const [isVeg, setIsVeg] = useState(true); // Default to Veg for a more inclusive start
 
   const handleCafeClick = (cafe: Cafe) => {
     if (cafe.status === 'Closed') {
@@ -25,8 +26,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
     navigateTo('menu');
   };
 
-  const filteredFoodItems = FOOD_ITEMS.filter(item => isVeg ? item.isVeg : true);
+  const filteredFoodItems = FOOD_ITEMS.filter(item => isVeg ? item.isVeg : !item.isVeg);
   const cartItemCount = cart.reduce((total, current) => total + current.quantity, 0);
+
+  const popularFoodItems = FOOD_ITEMS.filter(item => 
+    CAFES.some(cafe => cafe.name === item.cafe && cafe.status === 'Open')
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#FFF9F2]">
@@ -51,7 +56,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
           <div className="mt-4 flex items-center justify-between">
               <h2 className="font-bold text-lg text-gray-800">Discover tasty foods</h2>
               <div className="flex items-center space-x-2">
-                  <span className={`font-medium ${!isVeg ? 'text-orange-500' : 'text-gray-400'}`}>All</span>
+                  <span className={`font-medium ${!isVeg ? 'text-orange-500' : 'text-gray-400'}`}>Non-Veg</span>
                   <button onClick={() => setIsVeg(!isVeg)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isVeg ? 'bg-green-500' : 'bg-gray-300'}`}>
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isVeg ? 'translate-x-6' : 'translate-x-1'}`}/>
                   </button>
@@ -83,7 +88,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
       </div>
 
       {/* Cafe List */}
-      <main className="flex-1 overflow-y-auto px-4 pb-20 no-scrollbar">
+      <ScrollableContainer className="px-4 pb-20">
         <h2 className="font-bold text-lg text-gray-800 my-4">Cafes</h2>
         <div className="space-y-3">
           {CAFES.map((cafe) => (
@@ -106,7 +111,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
             </div>
           ))}
         </div>
-      </main>
+
+        {/* Popular Food List */}
+        <h2 className="font-bold text-lg text-gray-800 my-4 pt-4">Popular Near You</h2>
+        <div className="space-y-3">
+          {popularFoodItems.map((item) => (
+            <div key={item.id} className="flex items-center bg-white p-3 rounded-xl shadow-sm">
+              <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover flex-shrink-0"/>
+              <div className="ml-4 flex-grow min-w-0">
+                <div className="flex items-center mb-1">
+                  <span className={`h-3 w-3 mr-1.5 rounded-full border flex-shrink-0 ${item.isVeg ? 'bg-green-500 border-green-600' : 'bg-red-500 border-red-600'}`}></span>
+                  <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
+                </div>
+                <p className="text-xs text-gray-500 truncate">{item.cafe}</p>
+                <p className="text-sm font-semibold text-gray-800 mt-2">₹{item.price.toFixed(2)}</p>
+              </div>
+              <div className="ml-2">
+                <button 
+                  onClick={() => addToCart(item)} 
+                  className="bg-orange-100 text-orange-600 font-bold px-4 py-1.5 text-sm rounded-lg hover:bg-orange-200 whitespace-nowrap"
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollableContainer>
       
       {cartItemCount > 0 && (
           <div className="absolute bottom-16 left-0 right-0 p-4">
