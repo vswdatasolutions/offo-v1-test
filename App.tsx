@@ -1,5 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
-import type { CartItem, OrderDetails, Cafe } from './types';
+import type { CartItem, OrderDetails, Cafe, Order } from './types';
+import { ORDERS_DATA } from './constants';
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -25,6 +27,9 @@ const App: React.FC = () => {
   const [location, setLocation] = useState({ city: '', company: '', building: '' });
   const [selectedCafe, setSelectedCafe] = useState<Cafe | null>(null);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [orders, setOrders] = useState<Order[]>(ORDERS_DATA);
+  const [orderToEdit, setOrderToEdit] = useState<Order | null>(null);
+
 
   const addToCart = (item: CartItem['item']) => {
     setCart(prevCart => {
@@ -53,6 +58,20 @@ const App: React.FC = () => {
 
   const navigateTo = (newScreen: Screen) => setScreen(newScreen);
 
+  const handleEditSchedule = (order: Order) => {
+    setOrderDetails(null); // Clear any new order details
+    setOrderToEdit(order);
+    navigateTo('schedule');
+  };
+
+  const handleUpdateOrder = (updatedOrder: Order) => {
+    setOrders(prevOrders => 
+        prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o))
+    );
+    setOrderToEdit(null); // Clear editing state
+    navigateTo('orders');
+  };
+
   const renderScreen = () => {
     switch (screen) {
       case 'splash':
@@ -60,9 +79,9 @@ const App: React.FC = () => {
       case 'onboarding':
         return <OnboardingScreen onGetStarted={() => navigateTo('login')} />;
       case 'login':
-        return <LoginScreen onLoginSuccess={() => navigateTo('location')} />;
+        return <LoginScreen onLoginSuccess={() => navigateTo('location')} navigateTo={navigateTo} />;
       case 'location':
-        return <LocationScreen onConfirm={loc => { setLocation(loc); navigateTo('home'); }} />;
+        return <LocationScreen onConfirm={loc => { setLocation(loc); navigateTo('home'); }} navigateTo={navigateTo} />;
       case 'home':
         return <HomeScreen 
                   location={location} 
@@ -91,6 +110,8 @@ const App: React.FC = () => {
                   orderDetails={orderDetails!}
                   setOrderDetails={setOrderDetails}
                   navigateTo={navigateTo}
+                  orderToEdit={orderToEdit}
+                  onUpdateOrder={handleUpdateOrder}
                 />;
       case 'payment':
         return <PaymentScreen
@@ -105,7 +126,12 @@ const App: React.FC = () => {
                   orderDetails={orderDetails}
                 />;
       case 'orders':
-        return <OrdersScreen navigateTo={navigateTo} />;
+        return <OrdersScreen 
+                  navigateTo={navigateTo} 
+                  orders={orders} 
+                  setOrders={setOrders} 
+                  onEditSchedule={handleEditSchedule} 
+                />;
       case 'help':
         return <HelpScreen navigateTo={navigateTo} />;
       case 'profile':

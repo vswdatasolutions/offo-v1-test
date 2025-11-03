@@ -31,3 +31,18 @@ export interface OrderDetails {
   scheduledDate?: Date;
   paymentMethod?: string;
 }
+
+export interface OrderItem {
+    item: FoodItem;
+    quantity: number;
+}
+
+export interface Order {
+    id: string;
+    cafe: string;
+    date: Date;
+    items: OrderItem[];
+    total: number;
+    status: 'Delivered' | 'Cancelled' | 'Preparing' | 'Ready for Pickup' | 'Scheduled' | 'Out for Delivery';
+    placedAt: Date;
+}

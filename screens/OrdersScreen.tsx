@@ -4,19 +4,21 @@ import BottomNav from '../components/BottomNav';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import { FOOD_ITEMS } from '../constants';
 import type { FoodItem } from '../types';
+import ScrollableContainer from '../components/ScrollableContainer';
+import OrderStatusTracker from '../components/OrderStatusTracker';
 
 interface OrderItem {
     item: FoodItem;
     quantity: number;
 }
 
-interface Order {
+export interface Order {
     id: string;
     cafe: string;
     date: string;
     items: OrderItem[];
     total: number;
-    status: 'Delivered' | 'Cancelled' | 'Ongoing' | 'Scheduled' | 'Preparing' | 'Ready to Take';
+    status: 'Delivered' | 'Cancelled' | 'Preparing' | 'Ready for Pickup' | 'Scheduled' | 'Out for Delivery';
     placedAt: Date;
 }
 
@@ -33,18 +35,7 @@ const mockOrders: Order[] = [
         status: 'Scheduled',
         placedAt: new Date(),
     },
-    {
-        id: 'ODS56782',
-        cafe: 'Fresh Bites',
-        date: '30 Jun 2024, 12:00 PM',
-        items: [
-            { item: FOOD_ITEMS[3], quantity: 2 }, // Green Salad
-        ],
-        total: FOOD_ITEMS[3].price * 2,
-        status: 'Scheduled',
-        placedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Placed yesterday
-    },
-    {
+     {
         id: 'OD12349',
         cafe: 'Urban Roast',
         date: '26 Jun 2024, 10:15 AM',
@@ -52,41 +43,30 @@ const mockOrders: Order[] = [
             { item: FOOD_ITEMS[2], quantity: 2 }, // Hot Coffee
         ],
         total: FOOD_ITEMS[2].price * 2,
-        status: 'Ongoing',
-        placedAt: new Date(Date.now() - 2 * 60 * 1000), // Placed 2 minutes ago for testing
+        status: 'Preparing',
+        placedAt: new Date(Date.now() - 2 * 60 * 1000), // Placed 2 minutes ago
     },
     {
         id: 'OD12350',
         cafe: 'Caffeine Fix',
         date: '26 Jun 2024, 10:25 AM',
         items: [
-            { item: FOOD_ITEMS[9], quantity: 1 }, // Chicken Burger
+            { item: FOOD_ITEMS[9], quantity: 1 },
         ],
         total: FOOD_ITEMS[9].price,
-        status: 'Preparing',
-        placedAt: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        status: 'Ready for Pickup',
+        placedAt: new Date(Date.now() - 10 * 60 * 1000),
     },
     {
         id: 'OD12351',
         cafe: 'Cozy Corner',
-        date: '26 Jun 2024, 10:20 AM',
-        items: [
-            { item: FOOD_ITEMS[1], quantity: 1 }, // Chicken Tikka Fry
-        ],
-        total: FOOD_ITEMS[1].price,
-        status: 'Ready to Take',
-        placedAt: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
-    },
-    {
-        id: 'OD12352',
-        cafe: 'Fresh Bites',
         date: '26 Jun 2024, 10:30 AM',
         items: [
-            { item: FOOD_ITEMS[7], quantity: 1 }, // South Meals
+            { item: FOOD_ITEMS[1], quantity: 1 },
         ],
-        total: FOOD_ITEMS[7].price,
-        status: 'Preparing',
-        placedAt: new Date(Date.now() - 3 * 60 * 1000), // 3 mins ago
+        total: FOOD_ITEMS[1].price,
+        status: 'Out for Delivery',
+        placedAt: new Date(Date.now() - 15 * 60 * 1000),
     },
     {
         id: 'OD12345',
@@ -101,17 +81,6 @@ const mockOrders: Order[] = [
         placedAt: new Date('2024-06-25T12:30:00'),
     },
     {
-        id: 'OD12346',
-        cafe: 'Urban Roast',
-        date: '24 Jun 2024, 01:00 PM',
-        items: [
-            { item: FOOD_ITEMS[5], quantity: 1 }, // Masala Dosa
-        ],
-        total: FOOD_ITEMS[5].price,
-        status: 'Delivered',
-        placedAt: new Date('2024-06-24T13:00:00'),
-    },
-    {
         id: 'OD12347',
         cafe: 'Fresh Bites',
         date: '22 Jun 2024, 07:00 PM',
@@ -123,18 +92,6 @@ const mockOrders: Order[] = [
         status: 'Cancelled',
         placedAt: new Date('2024-06-22T19:00:00'),
     },
-    {
-        id: 'OD12348',
-        cafe: 'Caffeine Fix',
-        date: '20 Jun 2024, 09:00 AM',
-        items: [
-            { item: FOOD_ITEMS[9], quantity: 2 }, // Chicken Burger
-            { item: FOOD_ITEMS[2], quantity: 1 }, // Hot Coffee
-        ],
-        total: (FOOD_ITEMS[9].price * 2) + FOOD_ITEMS[2].price,
-        status: 'Delivered',
-        placedAt: new Date('2024-06-20T09:00:00'),
-    },
 ];
 
 
@@ -142,25 +99,29 @@ interface OrdersScreenProps {
   navigateTo: (screen: Screen) => void;
 }
 
-const OrderStatusPill: React.FC<{ status: string }> = ({ status }) => {
+const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
   const baseClasses = "text-xs font-semibold px-2.5 py-1 rounded-full";
-  const isBlinking = status === 'Ongoing' || status === 'Scheduled' || status === 'Preparing' || status === 'Ready to Take';
-  const blinkingClass = isBlinking ? 'animate-blink' : '';
-
   switch (status) {
     case 'Delivered':
-      return <span className={`${baseClasses} bg-green-100 text-green-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-gray-200 text-gray-800`}>{status}</span>;
     case 'Cancelled':
       return <span className={`${baseClasses} bg-red-100 text-red-800`}>{status}</span>;
     case 'Scheduled':
-      return <span className={`${baseClasses} ${blinkingClass} bg-blue-100 text-blue-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>{status}</span>;
     case 'Preparing':
-        return <span className={`${baseClasses} ${blinkingClass} bg-orange-100 text-orange-800`}>{status}</span>;
-    case 'Ready to Take':
-        return <span className={`${baseClasses} ${blinkingClass} bg-purple-100 text-purple-800`}>Ready to Take</span>;
-    case 'Ongoing':
+      return <span className={`${baseClasses} bg-yellow-100 text-yellow-800 animate-pulse`}>{status}</span>;
+    case 'Ready for Pickup':
+       return <span className={`${baseClasses} bg-green-100 text-green-800 relative flex items-center`}>
+          <span className="absolute -left-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          <span className="ml-3">{status}</span>
+      </span>;
+    case 'Out for Delivery':
+      return <span className={`${baseClasses} bg-indigo-100 text-indigo-800 animate-pulse`}>{status}</span>;
     default:
-      return <span className={`${baseClasses} ${blinkingClass} bg-yellow-100 text-yellow-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
   }
 };
 
@@ -189,7 +150,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
   };
 
   const scheduledOrders = orders.filter(o => o.status === 'Scheduled');
-  const ongoingOrders = orders.filter(o => o.status === 'Ongoing' || o.status === 'Preparing' || o.status === 'Ready to Take');
+  const ongoingOrders = orders.filter(o => ['Preparing', 'Ready for Pickup', 'Out for Delivery'].includes(o.status));
   const pastOrders = orders.filter(o => o.status === 'Delivered' || o.status === 'Cancelled');
 
   const ordersToDisplay = activeTab === 'scheduled'
@@ -246,10 +207,10 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
         </button>
       </div>
 
-      <main className="flex-grow overflow-y-auto p-4 space-y-4 no-scrollbar">
+      <ScrollableContainer className="p-4 space-y-4">
         {ordersToDisplay.length > 0 ? (
           ordersToDisplay.map(order => {
-            const isCancellable = (order.status === 'Ongoing' && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000) || order.status === 'Scheduled';
+            const isCancellable = (['Preparing', 'Scheduled'].includes(order.status) && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000);
 
             return (
             <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border transition-all duration-300">
@@ -260,6 +221,12 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
                 </div>
                 <OrderStatusPill status={order.status} />
               </div>
+
+              {activeTab === 'ongoing' && (
+                  <div className="mt-4">
+                      <OrderStatusTracker status={order.status} />
+                  </div>
+              )}
         
               <div className="mt-3 flex justify-between items-center">
                   <p className="text-sm font-semibold text-gray-800">Total: ₹{order.total.toFixed(2)}</p>
@@ -290,6 +257,14 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                  </button>
+                 {order.status === 'Scheduled' && (
+                    <button 
+                        onClick={() => alert('Feature to edit scheduled orders coming soon!')}
+                        className="text-sm font-semibold text-blue-600 bg-blue-100 px-4 py-2 rounded-lg hover:bg-blue-200"
+                    >
+                        Edit Schedule
+                    </button>
+                 )}
                  {isCancellable && (
                     <button 
                         onClick={() => handleCancelClick(order.id)}
@@ -319,7 +294,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
                 </p>
             </div>
         )}
-      </main>
+      </ScrollableContainer>
 
       <BottomNav activeScreen="orders" navigateTo={navigateTo} />
     </div>
