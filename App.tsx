@@ -1,7 +1,6 @@
-
-import React, { useState, useMemo } from 'react';
-import type { CartItem, OrderDetails, Cafe, Order } from './types';
-import { ORDERS_DATA } from './constants';
+import React, { useState } from 'react';
+import type { CartItem, OrderDetails, Cafe, Order, FoodItem } from './types';
+import { ORDERS_DATA, CAFES } from './constants';
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -18,6 +17,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import AboutScreen from './screens/AboutScreen';
 import MyAccountScreen from './screens/MyAccountScreen';
 import PaymentMethodsScreen from './screens/PaymentMethodsScreen';
+import FoodItemDetailModal from '../components/FoodItemDetailModal';
 
 export type Screen = 'splash' | 'onboarding' | 'login' | 'location' | 'home' | 'menu' | 'cart' | 'schedule' | 'payment' | 'success' | 'orders' | 'help' | 'profile' | 'about' | 'my-account' | 'payment-methods';
 
@@ -29,6 +29,8 @@ const App: React.FC = () => {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [orders, setOrders] = useState<Order[]>(ORDERS_DATA);
   const [orderToEdit, setOrderToEdit] = useState<Order | null>(null);
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [foodDetailItem, setFoodDetailItem] = useState<FoodItem | null>(null);
 
 
   const addToCart = (item: CartItem['item']) => {
@@ -58,18 +60,72 @@ const App: React.FC = () => {
 
   const navigateTo = (newScreen: Screen) => setScreen(newScreen);
 
+  const handleViewFoodItem = (item: FoodItem) => setFoodDetailItem(item);
+  const handleCloseFoodDetail = () => setFoodDetailItem(null);
+  const handleAddToCartAndCloseModal = (item: FoodItem) => {
+    addToCart(item);
+    setFoodDetailItem(null);
+  };
+
   const handleEditSchedule = (order: Order) => {
     setOrderDetails(null); // Clear any new order details
     setOrderToEdit(order);
     navigateTo('schedule');
+  };
+  
+  const handleEditOrderItems = (order: Order) => {
+    const cafe = CAFES.find(c => c.name === order.cafe);
+    if (!cafe) {
+      alert("Cafe not found, cannot edit order.");
+      return;
+    }
+    if (cafe.status === 'Closed') {
+      alert("This cafe is currently closed and the order cannot be edited.");
+      return;
+    }
+    setSelectedCafe(cafe);
+    setOrderToEdit(order);
+    setCart(order.items);
+    setIsEditingOrder(true);
+    navigateTo('menu');
   };
 
   const handleUpdateOrder = (updatedOrder: Order) => {
     setOrders(prevOrders => 
         prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o))
     );
-    setOrderToEdit(null); // Clear editing state
+    // Reset all editing states
+    setOrderToEdit(null);
+    setIsEditingOrder(false);
+    setCart([]);
     navigateTo('orders');
+  };
+
+  const confirmOrderItemsUpdate = () => {
+    if (!orderToEdit || !cart) return;
+
+    if (cart.length === 0) {
+        alert("Cannot update with an empty cart. Please add items or cancel the order from the 'My Orders' screen.");
+        return;
+    }
+
+    const subtotal = cart.reduce((acc, cartItem) => acc + cartItem.item.price * cartItem.quantity, 0);
+    const convenienceFee = 6.00;
+    const total = subtotal + convenienceFee;
+
+    const updatedOrder: Order = {
+        ...orderToEdit,
+        items: cart,
+        total,
+    };
+    handleUpdateOrder(updatedOrder);
+  };
+
+  const handleCancelEditOrder = () => {
+      setCart([]);
+      setOrderToEdit(null);
+      setIsEditingOrder(false);
+      navigateTo('orders');
   };
 
   const renderScreen = () => {
@@ -89,6 +145,7 @@ const App: React.FC = () => {
                   navigateTo={navigateTo} 
                   addToCart={addToCart} 
                   setSelectedCafe={setSelectedCafe}
+                  onViewFoodItem={handleViewFoodItem}
                 />;
       case 'menu':
         return <MenuScreen 
@@ -96,6 +153,8 @@ const App: React.FC = () => {
                   cart={cart} 
                   navigateTo={navigateTo} 
                   addToCart={addToCart} 
+                  isEditingOrder={isEditingOrder}
+                  onCancelEdit={handleCancelEditOrder}
                 />;
       case 'cart':
         return <CartScreen 
@@ -104,6 +163,8 @@ const App: React.FC = () => {
                   navigateTo={navigateTo}
                   setOrderDetails={setOrderDetails}
                   clearCart={clearCart}
+                  isEditingOrder={isEditingOrder}
+                  onUpdateOrder={confirmOrderItemsUpdate}
                 />;
       case 'schedule':
         return <ScheduleScreen 
@@ -131,6 +192,7 @@ const App: React.FC = () => {
                   orders={orders} 
                   setOrders={setOrders} 
                   onEditSchedule={handleEditSchedule} 
+                  onEditOrderItems={handleEditOrderItems}
                 />;
       case 'help':
         return <HelpScreen navigateTo={navigateTo} />;
@@ -148,9 +210,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-100 sm:bg-gray-800 flex justify-center items-center h-screen">
+    <div className="bg-gray-100 sm:bg-gray-800 flex justify-center items-center h-full w-full">
       <div className="w-full h-full sm:max-w-sm sm:h-[850px] bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden relative">
         {renderScreen()}
+        {foodDetailItem && (
+          <FoodItemDetailModal
+            item={foodDetailItem}
+            onClose={handleCloseFoodDetail}
+            onAddToCart={handleAddToCartAndCloseModal}
+          />
+        )}
       </div>
     </div>
   );

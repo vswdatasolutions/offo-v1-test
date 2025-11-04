@@ -12,9 +12,10 @@ interface HomeScreenProps {
   navigateTo: (screen: Screen) => void;
   addToCart: (item: FoodItem) => void;
   setSelectedCafe: (cafe: Cafe) => void;
+  onViewFoodItem: (item: FoodItem) => void;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, addToCart, setSelectedCafe }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, addToCart, setSelectedCafe, onViewFoodItem }) => {
   const [isVeg, setIsVeg] = useState(true); // Default to Veg for a more inclusive start
 
   const handleCafeClick = (cafe: Cafe) => {
@@ -31,6 +32,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
 
   const popularFoodItems = FOOD_ITEMS.filter(item => 
     CAFES.some(cafe => cafe.name === item.cafe && cafe.status === 'Open')
+  );
+  
+  const FoodItemCard: React.FC<{item: FoodItem}> = ({item}) => (
+    <div key={item.id} className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col cursor-pointer" onClick={() => onViewFoodItem(item)}>
+      <img src={item.image} alt={item.name} className="w-full h-24 rounded-lg object-cover mb-2"/>
+      <div className="flex-grow">
+        <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
+        <p className="text-xs text-gray-500">{item.cafe}</p>
+      </div>
+      <div className="flex justify-between items-center mt-2">
+          <p className="text-sm font-semibold text-gray-800">₹{item.price.toFixed(2)}</p>
+          <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="bg-orange-100 text-orange-600 font-bold px-3 py-1 text-xs rounded-lg hover:bg-orange-200">
+            + Add
+          </button>
+      </div>
+    </div>
   );
 
   return (
@@ -66,29 +83,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
         </header>
 
         {/* Food Marquee */}
-        <div className="overflow-x-auto no-scrollbar py-2">
-          <div className="flex space-x-4 px-4">
-            {filteredFoodItems.map(item => (
-              <div key={item.id} className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col">
-                <img src={item.image} alt={item.name} className="w-full h-24 rounded-lg object-cover mb-2"/>
-                <div className="flex-grow">
-                  <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
-                  <p className="text-xs text-gray-500">{item.cafe}</p>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                    <p className="text-sm font-semibold text-gray-800">₹{item.price.toFixed(2)}</p>
-                    <button onClick={() => addToCart(item)} className="bg-orange-100 text-orange-600 font-bold px-3 py-1 text-xs rounded-lg hover:bg-orange-200">
-                      + Add
-                    </button>
-                </div>
-              </div>
+        <div className="overflow-hidden py-2 marquee-container">
+          <div className="animate-marquee flex space-x-4 px-2">
+            {[...filteredFoodItems, ...filteredFoodItems].map((item, index) => (
+              <FoodItemCard key={`${item.id}-${index}`} item={item}/>
             ))}
           </div>
         </div>
       </div>
 
       {/* Cafe List */}
-      <ScrollableContainer className="px-4 pb-20">
+      <ScrollableContainer className={`px-4 ${cartItemCount > 0 ? 'pb-32' : 'pb-20'}`}>
         <h2 className="font-bold text-lg text-gray-800 my-4">Cafes</h2>
         <div className="space-y-3">
           {CAFES.map((cafe) => (
@@ -116,7 +121,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
         <h2 className="font-bold text-lg text-gray-800 my-4 pt-4">Popular Near You</h2>
         <div className="space-y-3">
           {popularFoodItems.map((item) => (
-            <div key={item.id} className="flex items-center bg-white p-3 rounded-xl shadow-sm">
+            <div key={item.id} className="flex items-center bg-white p-3 rounded-xl shadow-sm cursor-pointer" onClick={() => onViewFoodItem(item)}>
               <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover flex-shrink-0"/>
               <div className="ml-4 flex-grow min-w-0">
                 <div className="flex items-center mb-1">
@@ -128,7 +133,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
               </div>
               <div className="ml-2">
                 <button 
-                  onClick={() => addToCart(item)} 
+                  onClick={(e) => { e.stopPropagation(); addToCart(item); }} 
                   className="bg-orange-100 text-orange-600 font-bold px-4 py-1.5 text-sm rounded-lg hover:bg-orange-200 whitespace-nowrap"
                 >
                   + Add
