@@ -2,101 +2,16 @@ import React, { useState } from 'react';
 import type { Screen } from '../App';
 import BottomNav from '../components/BottomNav';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
-import { FOOD_ITEMS } from '../constants';
-import type { FoodItem } from '../types';
+import type { Order } from '../types';
 import ScrollableContainer from '../components/ScrollableContainer';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 
-interface OrderItem {
-    item: FoodItem;
-    quantity: number;
-}
-
-export interface Order {
-    id: string;
-    cafe: string;
-    date: string;
-    items: OrderItem[];
-    total: number;
-    status: 'Delivered' | 'Cancelled' | 'Preparing' | 'Ready for Pickup' | 'Scheduled' | 'Out for Delivery';
-    placedAt: Date;
-}
-
-const mockOrders: Order[] = [
-    {
-        id: 'ODS56781',
-        cafe: 'Cozy Corner',
-        date: '28 Jun 2024, 01:00 PM',
-        items: [
-            { item: FOOD_ITEMS[8], quantity: 1 }, // Paneer Biryani
-            { item: FOOD_ITEMS[2], quantity: 1 }, // Hot Coffee
-        ],
-        total: FOOD_ITEMS[8].price + FOOD_ITEMS[2].price,
-        status: 'Scheduled',
-        placedAt: new Date(),
-    },
-     {
-        id: 'OD12349',
-        cafe: 'Urban Roast',
-        date: '26 Jun 2024, 10:15 AM',
-        items: [
-            { item: FOOD_ITEMS[2], quantity: 2 }, // Hot Coffee
-        ],
-        total: FOOD_ITEMS[2].price * 2,
-        status: 'Preparing',
-        placedAt: new Date(Date.now() - 2 * 60 * 1000), // Placed 2 minutes ago
-    },
-    {
-        id: 'OD12350',
-        cafe: 'Caffeine Fix',
-        date: '26 Jun 2024, 10:25 AM',
-        items: [
-            { item: FOOD_ITEMS[9], quantity: 1 },
-        ],
-        total: FOOD_ITEMS[9].price,
-        status: 'Ready for Pickup',
-        placedAt: new Date(Date.now() - 10 * 60 * 1000),
-    },
-    {
-        id: 'OD12351',
-        cafe: 'Cozy Corner',
-        date: '26 Jun 2024, 10:30 AM',
-        items: [
-            { item: FOOD_ITEMS[1], quantity: 1 },
-        ],
-        total: FOOD_ITEMS[1].price,
-        status: 'Out for Delivery',
-        placedAt: new Date(Date.now() - 15 * 60 * 1000),
-    },
-    {
-        id: 'OD12345',
-        cafe: 'Cozy Corner',
-        date: '25 Jun 2024, 12:30 PM',
-        items: [
-            { item: FOOD_ITEMS[0], quantity: 1 }, // Chicken Tikka Fry
-            { item: FOOD_ITEMS[4], quantity: 1 }, // Chicken Noodles
-        ],
-        total: FOOD_ITEMS[0].price + FOOD_ITEMS[4].price,
-        status: 'Delivered',
-        placedAt: new Date('2024-06-25T12:30:00'),
-    },
-    {
-        id: 'OD12347',
-        cafe: 'Fresh Bites',
-        date: '22 Jun 2024, 07:00 PM',
-        items: [
-            { item: FOOD_ITEMS[3], quantity: 1 }, // Green Salad
-            { item: FOOD_ITEMS[7], quantity: 1 }, // South Meals
-        ],
-        total: FOOD_ITEMS[3].price + FOOD_ITEMS[7].price,
-        status: 'Cancelled',
-        placedAt: new Date('2024-06-22T19:00:00'),
-    },
-];
-
-
 interface OrdersScreenProps {
   navigateTo: (screen: Screen) => void;
+  orders: Order[];
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+  onEditSchedule: (order: Order) => void;
+  onEditOrderItems: (order: Order) => void;
 }
 
 const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
@@ -125,10 +40,9 @@ const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
   }
 };
 
-const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
+const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrders, onEditSchedule, onEditOrderItems }) => {
   const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('ongoing');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
   const toggleOrderDetails = (orderId: string) => {
@@ -211,13 +125,14 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
         {ordersToDisplay.length > 0 ? (
           ordersToDisplay.map(order => {
             const isCancellable = (['Preparing', 'Scheduled'].includes(order.status) && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000);
-
+            const formattedDate = order.date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+            
             return (
             <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border transition-all duration-300">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-gray-800">{order.cafe}</h3>
-                  <p className="text-xs text-gray-500">{order.id} | {order.date}</p>
+                  <p className="text-xs text-gray-500">{order.id} | {formattedDate}</p>
                 </div>
                 <OrderStatusPill status={order.status} />
               </div>
@@ -258,12 +173,20 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo }) => {
                     </svg>
                  </button>
                  {order.status === 'Scheduled' && (
-                    <button 
-                        onClick={() => alert('Feature to edit scheduled orders coming soon!')}
-                        className="text-sm font-semibold text-blue-600 bg-blue-100 px-4 py-2 rounded-lg hover:bg-blue-200"
-                    >
-                        Edit Schedule
-                    </button>
+                    <>
+                      <button 
+                          onClick={() => onEditSchedule(order)}
+                          className="text-sm font-semibold text-blue-600 bg-blue-100 px-4 py-2 rounded-lg hover:bg-blue-200"
+                      >
+                          Edit Schedule
+                      </button>
+                      <button 
+                          onClick={() => onEditOrderItems(order)}
+                          className="text-sm font-semibold text-green-600 bg-green-100 px-4 py-2 rounded-lg hover:bg-green-200"
+                      >
+                          Edit Items
+                      </button>
+                    </>
                  )}
                  {isCancellable && (
                     <button 

@@ -1,10 +1,16 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
-import type { OrderDetails, ScheduledItem, Order } from '../types';
+import type { OrderDetails, Order } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import TimePicker from '../components/TimePicker';
 import ScrollableContainer from '../components/ScrollableContainer';
+
+interface ScheduledItem {
+  id: number;
+  date: Date;
+  time: string;
+}
 
 interface ScheduleScreenProps {
   orderDetails: OrderDetails;

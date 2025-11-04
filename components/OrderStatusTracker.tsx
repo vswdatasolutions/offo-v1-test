@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: The 'Order' type should be imported from the central 'types.ts' file.
 import type { Order } from '../types';
 
 const allStatuses: Order['status'][] = ['Preparing', 'Ready for Pickup', 'Out for Delivery'];
