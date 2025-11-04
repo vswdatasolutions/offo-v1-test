@@ -17,7 +17,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import AboutScreen from './screens/AboutScreen';
 import MyAccountScreen from './screens/MyAccountScreen';
 import PaymentMethodsScreen from './screens/PaymentMethodsScreen';
-import FoodItemDetailModal from '../components/FoodItemDetailModal';
+import FoodItemDetailModal from './components/FoodItemDetailModal';
 
 export type Screen = 'splash' | 'onboarding' | 'login' | 'location' | 'home' | 'menu' | 'cart' | 'schedule' | 'payment' | 'success' | 'orders' | 'help' | 'profile' | 'about' | 'my-account' | 'payment-methods';
 
