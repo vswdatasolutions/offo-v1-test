@@ -79,20 +79,47 @@
         animation: fade-in-slow 0.5s ease-out forwards;
       }
       
-      /* Food Marquee Animation */
+      /* Marquee Animation */
       @keyframes marquee {
         0% { transform: translateX(0%); }
-        100% { transform: translateX(-100%); }
+        100% { transform: translateX(-50%); } /* Translate by half since content is duplicated */
       }
-      .animate-marquee {
-        display: flex;
+
+      .marquee-content {
         animation: marquee 40s linear infinite;
         will-change: transform;
       }
-      .marquee-container:hover .animate-marquee {
+
+      .marquee:hover .marquee-content {
         animation-play-state: paused;
       }
-
+      
+      /* Responsive marquee speed */
+      @media (min-width: 640px) {
+        .marquee-content {
+          animation-duration: 60s;
+        }
+      }
+      
+      /* Marquee visual cues */
+      .marquee::before,
+      .marquee::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 4rem; /* 64px */
+        z-index: 2;
+        pointer-events: none; /* Allow clicks to pass through */
+      }
+      .marquee::before {
+        left: 0;
+        background: linear-gradient(to right, #FFF9F2, transparent);
+      }
+      .marquee::after {
+        right: 0;
+        background: linear-gradient(to left, #FFF9F2, transparent);
+      }
     </style>
   <script type="importmap">
 {

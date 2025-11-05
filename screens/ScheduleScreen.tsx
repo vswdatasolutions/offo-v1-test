@@ -1,16 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
-import type { OrderDetails, Order } from '../types';
+import type { OrderDetails, ScheduledItem, Order } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import TimePicker from '../components/TimePicker';
 import ScrollableContainer from '../components/ScrollableContainer';
-
-interface ScheduledItem {
-  id: number;
-  date: Date;
-  time: string;
-}
 
 interface ScheduleScreenProps {
   orderDetails: OrderDetails;
@@ -27,7 +21,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
   const [initialSelectedDates, setInitialSelectedDates] = useState<Date[]>([]);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [scheduleTime, setScheduleTime] = useState('08:00 AM');
-  const [repeat, setRepeat] = useState<'none' | 'weekly' | 'monthly'>('none');
+  const [repeat, setRepeat] = useState<'none' | 'weekly'>('none');
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,7 +112,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
     }, 2500);
   };
 
-  const handleRepeatChange = (newRepeat: 'none' | 'weekly' | 'monthly') => {
+  const handleRepeatChange = (newRepeat: 'none' | 'weekly') => {
     setRepeat(newRepeat);
 
     if (initialSelectedDates.length === 0) {
@@ -134,36 +128,19 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
     }
 
     const newDatesSet = new Set<number>(initialSelectedDates.map(d => d.getTime()));
-    const displayedMonth = currentDate.getMonth();
-    const displayedYear = currentDate.getFullYear();
-    const monthName = currentDate.toLocaleString('default', { month: 'long' });
 
     if (newRepeat === 'weekly') {
         initialSelectedDates.forEach(initialDate => {
-            if (initialDate.getMonth() === displayedMonth && initialDate.getFullYear() === displayedYear) {
-                let dateIterator = new Date(initialDate.getTime());
-                dateIterator.setDate(dateIterator.getDate() + 7);
-                while (dateIterator.getMonth() === displayedMonth) {
-                    if (dateIterator >= today) {
-                        newDatesSet.add(dateIterator.getTime());
-                    }
-                    dateIterator.setDate(dateIterator.getDate() + 7);
+            // Add the next 3 weeks for a total of 4 occurrences
+            for (let i = 1; i <= 3; i++) {
+                const dateIterator = new Date(initialDate.getTime());
+                dateIterator.setDate(dateIterator.getDate() + (7 * i));
+                if (dateIterator >= today) {
+                    newDatesSet.add(dateIterator.getTime());
                 }
             }
         });
-        showNotification(`Weekly repeat applied for ${monthName}.`);
-    }
-
-    if (newRepeat === 'monthly') {
-        initialSelectedDates.forEach(date => {
-            for (let i = 1; i <= 2; i++) { // For the next 2 months
-                const nextMonthDate = new Date(date.getFullYear(), date.getMonth() + i, date.getDate());
-                if (nextMonthDate.getDate() === date.getDate() && nextMonthDate >= today) {
-                    newDatesSet.add(nextMonthDate.getTime());
-                }
-            }
-        });
-        showNotification(`Monthly repeat applied for next 2 months.`);
+        showNotification(`Weekly repeat applied for 4 weeks.`);
     }
     
     const sortedDates = Array.from(newDatesSet).map(t => new Date(t)).sort((a, b) => a.getTime() - b.getTime());
@@ -223,6 +200,8 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
     return `${firstPart},... +${remainingCount}`;
   };
 
+  const checkoutTotal = !isEditMode && orderDetails ? (orderDetails.subtotal + orderDetails.convenienceFee) * selectedDates.length : 0;
+
   return (
     <div className="flex flex-col h-full bg-[#FFF9F2] relative">
       {notification && (
@@ -256,7 +235,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
                 </div>
             </div>
         )}
-        <p className="font-semibold text-center mb-4 text-gray-700">Please select date and time</p>
+        <p className="font-semibold text-center my-4 text-gray-700">Please select date and time</p>
         
         <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="flex justify-between items-center mb-4 px-2">
@@ -307,8 +286,8 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
         <div className={`mt-6 ${isEditMode ? 'opacity-50 pointer-events-none' : ''}`}>
             <h3 className="font-bold text-lg text-gray-700 mb-3 px-2">Repeat</h3>
             <div className="flex items-center bg-gray-100 p-1 rounded-full shadow-inner">
-                {(['None', 'Weekly', 'Monthly'] as const).map((option) => {
-                    const value = option.toLowerCase() as 'none' | 'weekly' | 'monthly';
+                {(['None', 'Weekly'] as const).map((option) => {
+                    const value = option.toLowerCase() as 'none' | 'weekly';
                     return (
                         <button
                             key={option}
@@ -353,7 +332,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
           disabled={selectedDates.length === 0}
           className="w-full bg-orange-500 text-white font-bold py-4 rounded-xl shadow-md hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {isEditMode ? 'Update Schedule' : 'Checkout'}
+          {isEditMode ? 'Update Schedule' : `Checkout - ₹${checkoutTotal.toFixed(2)}`}
         </button>
       </footer>
     </div>

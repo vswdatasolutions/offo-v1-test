@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Screen } from '../App';
 import type { CartItem, FoodItem, Cafe } from '../types';
 import { CAFES, FOOD_ITEMS } from '../constants';
@@ -18,6 +19,16 @@ interface HomeScreenProps {
 const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, addToCart, setSelectedCafe, onViewFoodItem }) => {
   const [isVeg, setIsVeg] = useState(true); // Default to Veg for a more inclusive start
 
+  const marqueeContentRef = useRef<HTMLDivElement>(null);
+  // FIX: Initialize useRef with a value (null) to address the "Expected 1 arguments, but got 0" error.
+  const animationFrameRef = useRef<number | null>(null);
+  const currentTranslateX = useRef(0);
+  const speed = useRef(0.4); // pixels per frame
+
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollStart = useRef(0);
+
   const handleCafeClick = (cafe: Cafe) => {
     if (cafe.status === 'Closed') {
       alert(`${cafe.name} is currently closed.`);
@@ -28,14 +39,88 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
   };
 
   const filteredFoodItems = FOOD_ITEMS.filter(item => isVeg ? item.isVeg : !item.isVeg);
+  const marqueeItems = [...filteredFoodItems, ...filteredFoodItems];
   const cartItemCount = cart.reduce((total, current) => total + current.quantity, 0);
 
+  const animateMarquee = useCallback(() => {
+    if (!marqueeContentRef.current) return;
+    
+    const scrollWidth = marqueeContentRef.current.scrollWidth;
+    const resetBoundary = -scrollWidth / 2;
+
+    currentTranslateX.current -= speed.current;
+
+    if (currentTranslateX.current <= resetBoundary) {
+      currentTranslateX.current += scrollWidth / 2;
+    }
+
+    if (marqueeContentRef.current) {
+        marqueeContentRef.current.style.transform = `translateX(${currentTranslateX.current}px)`;
+    }
+    animationFrameRef.current = requestAnimationFrame(animateMarquee);
+  }, []);
+
+  const startAnimation = useCallback(() => {
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = requestAnimationFrame(animateMarquee);
+  }, [animateMarquee]);
+
+  const stopAnimation = useCallback(() => {
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+  }, []);
+
+  useEffect(() => {
+      if (marqueeItems.length > 0) {
+          startAnimation();
+      }
+      return () => stopAnimation();
+  }, [marqueeItems.length, startAnimation, stopAnimation]);
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isDragging.current = true;
+    stopAnimation();
+    startX.current = 'touches' in e ? e.touches[0].pageX : e.pageX;
+    scrollStart.current = currentTranslateX.current;
+    if (marqueeContentRef.current) {
+      marqueeContentRef.current.style.cursor = 'grabbing';
+      marqueeContentRef.current.style.pointerEvents = 'none';
+    }
+  };
+  
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging.current || !marqueeContentRef.current) return;
+    e.preventDefault();
+    
+    const x = 'touches' in e ? e.touches[0].pageX : e.pageX;
+    const walk = (x - startX.current);
+    let newTranslateX = scrollStart.current + walk;
+    
+    const scrollWidth = marqueeContentRef.current.scrollWidth;
+    const halfWidth = scrollWidth / 2;
+    
+    if (newTranslateX > 0) newTranslateX -= halfWidth;
+    if (newTranslateX < -halfWidth) newTranslateX += halfWidth;
+
+    currentTranslateX.current = newTranslateX;
+    marqueeContentRef.current.style.transform = `translateX(${currentTranslateX.current}px)`;
+  };
+  
+  const handleDragEnd = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (marqueeContentRef.current) {
+      marqueeContentRef.current.style.cursor = 'grab';
+      marqueeContentRef.current.style.pointerEvents = 'auto';
+    }
+    startAnimation();
+  };
+  
   const popularFoodItems = FOOD_ITEMS.filter(item => 
     CAFES.some(cafe => cafe.name === item.cafe && cafe.status === 'Open')
   );
   
   const FoodItemCard: React.FC<{item: FoodItem}> = ({item}) => (
-    <div key={item.id} className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col cursor-pointer" onClick={() => onViewFoodItem(item)}>
+    <div className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105" onClick={() => onViewFoodItem(item)}>
       <img src={item.image} alt={item.name} className="w-full h-24 rounded-lg object-cover mb-2"/>
       <div className="flex-grow">
         <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
@@ -82,13 +167,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
           </div>
         </header>
 
-        {/* Food Marquee */}
-        <div className="overflow-hidden py-2 marquee-container">
-          <div className="animate-marquee flex space-x-4 px-2">
-            {[...filteredFoodItems, ...filteredFoodItems].map((item, index) => (
-              <FoodItemCard key={`${item.id}-${index}`} item={item}/>
-            ))}
-          </div>
+        {/* User-Friendly Food Marquee */}
+        <div className="py-2">
+            <div
+              className="marquee overflow-hidden whitespace-nowrap relative cursor-grab"
+              onMouseDown={handleDragStart}
+              onMouseLeave={handleDragEnd}
+              onMouseUp={handleDragEnd}
+              onMouseMove={handleDragMove}
+              onTouchStart={handleDragStart}
+              onTouchEnd={handleDragEnd}
+              onTouchMove={handleDragMove}
+            >
+                <div ref={marqueeContentRef} className="flex space-x-4 px-2" style={{ willChange: 'transform' }}>
+                    {marqueeItems.map((item, index) => (
+                        <FoodItemCard key={`${item.id}-${index}`} item={item}/>
+                    ))}
+                </div>
+            </div>
         </div>
       </div>
 

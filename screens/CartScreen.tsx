@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { Screen } from '../App';
 import type { CartItem, OrderDetails } from '../types';
@@ -11,9 +10,11 @@ interface CartScreenProps {
   navigateTo: (screen: Screen) => void;
   setOrderDetails: (details: OrderDetails) => void;
   clearCart: () => void;
+  isEditingOrder?: boolean;
+  onUpdateOrder?: () => void;
 }
 
-const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navigateTo, setOrderDetails, clearCart }) => {
+const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navigateTo, setOrderDetails, clearCart, isEditingOrder, onUpdateOrder }) => {
   
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightedItem, setHighlightedItem] = useState<number | null>(null);
@@ -66,6 +67,7 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
   }, [cart, subtotal]);
 
   const handleProceed = (isScheduling: boolean) => {
+    if (isEditingOrder) return;
     const orderDetails: OrderDetails = { items: cart, subtotal, convenienceFee, total };
     setOrderDetails(orderDetails);
     navigateTo(isScheduling ? 'schedule' : 'payment');
@@ -88,7 +90,7 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
     setShowClearConfirm(false);
   };
 
-  if (cart.length === 0 && !removingItemId) {
+  if (cart.length === 0 && !removingItemId && !isEditingOrder) {
     return (
       <div className="flex flex-col h-full bg-[#FFF9F2]">
         <header className="p-4 flex items-center border-b">
@@ -128,12 +130,12 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
       )}
       <header className="p-4 flex items-center border-b">
         <div className="w-1/5">
-          <button onClick={() => navigateTo('home')}>
+          <button onClick={() => navigateTo(isEditingOrder ? 'menu' : 'home')}>
             <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
           </button>
         </div>
         <div className="w-3/5 text-center">
-          <h1 className="text-xl font-bold text-gray-800">Your Cart</h1>
+          <h1 className="text-xl font-bold text-gray-800">{isEditingOrder ? 'Edit Order' : 'Your Cart'}</h1>
         </div>
         <div className="w-1/5 text-right">
           <button onClick={handleClearCart} className="text-sm text-red-500 font-semibold pr-2">Clear All</button>
@@ -166,7 +168,7 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
           </div>
         ))}
         <div className="pt-2">
-            <button onClick={() => navigateTo('home')} className="w-full text-center py-3 border-2 border-dashed border-orange-400 text-orange-600 font-semibold rounded-xl hover:bg-orange-50 transition-colors">
+            <button onClick={() => navigateTo(isEditingOrder ? 'menu' : 'home')} className="w-full text-center py-3 border-2 border-dashed border-orange-400 text-orange-600 font-semibold rounded-xl hover:bg-orange-50 transition-colors">
               + Add More Items
             </button>
         </div>
@@ -182,8 +184,12 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
               </div>
             ))}
             <hr className="my-2"/>
+            <div className="flex justify-between font-semibold">
+              <span>Item Subtotal</span>
+              <span>₹ {subtotal.toFixed(2)}</span>
+            </div>
             <div className="flex justify-between">
-              <span>Convenience fee</span>
+              <span>Convenience Fee</span>
               <span>₹ {convenienceFee.toFixed(2)}</span>
             </div>
             <div className={`flex justify-between font-bold text-base text-gray-800 p-2 rounded-lg transition-all duration-300 ${highlightTotal ? 'bg-orange-100 scale-105' : ''}`}>
@@ -191,13 +197,21 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
               <span>₹ {total.toFixed(2)}</span>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <button onClick={() => handleProceed(false)} className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl shadow-md">
-              Order Now
-            </button>
-            <button onClick={() => handleProceed(true)} className="w-full bg-orange-100 text-orange-600 font-bold py-3 rounded-xl border border-orange-500">
-              Schedule Order
-            </button>
+          <div className="mt-4">
+            {isEditingOrder ? (
+               <button onClick={onUpdateOrder} className="w-full bg-green-500 text-white font-bold py-3 rounded-xl shadow-md">
+                  Update Order - ₹ {total.toFixed(2)}
+               </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => handleProceed(false)} className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl shadow-md">
+                  Order Now
+                </button>
+                <button onClick={() => handleProceed(true)} className="w-full bg-orange-100 text-orange-600 font-bold py-3 rounded-xl border border-orange-500">
+                  Schedule Order
+                </button>
+              </div>
+            )}
           </div>
         </footer>
       )}

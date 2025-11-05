@@ -11,12 +11,12 @@ const onboardingSteps = [
     description: 'Pre-book your lunch, save your time - we\'ll have it ready when you are.',
   },
   {
-    image: '../../assets/illustrations/17177.jpg',
+    image: '../../assets/illustrations/flash1.jpg',
     title: 'No Queue, No hassles',
     description: 'Smart, fast, and fresh - your cafeteria just got an upgrade!',
   },
   {
-    image: '../../assets/illustrations/flash1.jpg',
+    image: '../../assets/illustrations/',
     title: 'Order from Anywhere',
     description: 'Get all your favorite meals in one place — Order ahead, skip the line!',
   }
