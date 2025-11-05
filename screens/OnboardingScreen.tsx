@@ -16,7 +16,7 @@ const onboardingSteps = [
     description: 'Smart, fast, and fresh - your cafeteria just got an upgrade!',
   },
   {
-    image: '',
+    image: '../../assets/illustrations/17177.jpg',
     title: 'Order from Anywhere',
     description: 'Get all your favorite meals in one place — Order ahead, skip the line!',
   }
@@ -38,6 +38,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
   const isFinalStep = step === onboardingSteps.length - 1;
 
   return (
+
+    
     <div className="flex flex-col h-full bg-[#FFF9F2]">
       <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
         

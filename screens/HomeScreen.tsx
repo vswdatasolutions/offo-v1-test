@@ -20,12 +20,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
   const [isVeg, setIsVeg] = useState(true); // Default to Veg for a more inclusive start
 
   const marqueeContentRef = useRef<HTMLDivElement>(null);
-  // FIX: Initialize useRef with a value (null) to address the "Expected 1 arguments, but got 0" error.
   const animationFrameRef = useRef<number | null>(null);
   const currentTranslateX = useRef(0);
   const speed = useRef(0.4); // pixels per frame
 
   const isDragging = useRef(false);
+  const hasDragged = useRef(false); // To distinguish clicks from drags
   const startX = useRef(0);
   const scrollStart = useRef(0);
 
@@ -78,21 +78,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     isDragging.current = true;
+    hasDragged.current = false; // Reset on new interaction
     stopAnimation();
     startX.current = 'touches' in e ? e.touches[0].pageX : e.pageX;
     scrollStart.current = currentTranslateX.current;
     if (marqueeContentRef.current) {
       marqueeContentRef.current.style.cursor = 'grabbing';
-      marqueeContentRef.current.style.pointerEvents = 'none';
     }
   };
   
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging.current || !marqueeContentRef.current) return;
-    e.preventDefault();
     
     const x = 'touches' in e ? e.touches[0].pageX : e.pageX;
     const walk = (x - startX.current);
+    
+    // If moved more than a small threshold, it's a drag
+    if (Math.abs(walk) > 5) {
+        hasDragged.current = true;
+    }
+    
+    e.preventDefault(); // Prevent text selection, etc. during move
+
     let newTranslateX = scrollStart.current + walk;
     
     const scrollWidth = marqueeContentRef.current.scrollWidth;
@@ -110,17 +117,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
     isDragging.current = false;
     if (marqueeContentRef.current) {
       marqueeContentRef.current.style.cursor = 'grab';
-      marqueeContentRef.current.style.pointerEvents = 'auto';
     }
     startAnimation();
   };
   
   const popularFoodItems = FOOD_ITEMS.filter(item => 
-    CAFES.some(cafe => cafe.name === item.cafe && cafe.status === 'Open')
+    CAFES.some(cafe => cafe.name === item.cafe && cafe.status === 'Open') && (isVeg ? item.isVeg : !item.isVeg)
   );
   
   const FoodItemCard: React.FC<{item: FoodItem}> = ({item}) => (
-    <div className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105" onClick={() => onViewFoodItem(item)}>
+    <div className="flex-shrink-0 w-40 bg-white p-3 rounded-xl shadow-sm flex flex-col cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105" onClick={(e) => {
+        if (hasDragged.current) {
+            e.preventDefault();
+            return;
+        }
+        onViewFoodItem(item);
+    }}>
       <img src={item.image} alt={item.name} className="w-full h-24 rounded-lg object-cover mb-2"/>
       <div className="flex-grow">
         <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
@@ -128,7 +140,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
       </div>
       <div className="flex justify-between items-center mt-2">
           <p className="text-sm font-semibold text-gray-800">₹{item.price.toFixed(2)}</p>
-          <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="bg-orange-100 text-orange-600 font-bold px-3 py-1 text-xs rounded-lg hover:bg-orange-200">
+          <button onClick={(e) => { 
+              if (hasDragged.current) {
+                  e.preventDefault();
+                  return;
+              }
+              e.stopPropagation(); 
+              addToCart(item); 
+            }} className="bg-orange-100 text-orange-600 font-bold px-3 py-1 text-xs rounded-lg hover:bg-orange-200">
             + Add
           </button>
       </div>

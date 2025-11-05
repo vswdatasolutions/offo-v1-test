@@ -33,15 +33,15 @@ const App: React.FC = () => {
   const [foodDetailItem, setFoodDetailItem] = useState<FoodItem | null>(null);
 
 
-  const addToCart = (item: CartItem['item']) => {
+  const addToCart = (item: CartItem['item'], quantityToAdd: number = 1) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.item.id === item.id);
       if (existingItem) {
         return prevCart.map(cartItem =>
-          cartItem.item.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+          cartItem.item.id === item.id ? { ...cartItem, quantity: cartItem.quantity + quantityToAdd } : cartItem
         );
       }
-      return [...prevCart, { item, quantity: 1 }];
+      return [...prevCart, { item, quantity: quantityToAdd }];
     });
   };
 
@@ -62,8 +62,8 @@ const App: React.FC = () => {
 
   const handleViewFoodItem = (item: FoodItem) => setFoodDetailItem(item);
   const handleCloseFoodDetail = () => setFoodDetailItem(null);
-  const handleAddToCartAndCloseModal = (item: FoodItem) => {
-    addToCart(item);
+  const handleAddToCartAndCloseModal = (item: FoodItem, quantity: number) => {
+    addToCart(item, quantity);
     setFoodDetailItem(null);
   };
 

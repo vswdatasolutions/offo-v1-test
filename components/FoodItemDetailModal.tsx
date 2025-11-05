@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { FoodItem } from '../types';
 
 interface FoodItemDetailModalProps {
   item: FoodItem;
   onClose: () => void;
-  onAddToCart: (item: FoodItem) => void;
+  onAddToCart: (item: FoodItem, quantity: number) => void;
 }
 
 const FoodItemDetailModal: React.FC<FoodItemDetailModalProps> = ({ item, onClose, onAddToCart }) => {
+  const [quantity, setQuantity] = useState(1);
+
   return (
     <div 
         className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30 animate-fade-in"
@@ -41,12 +43,21 @@ const FoodItemDetailModal: React.FC<FoodItemDetailModalProps> = ({ item, onClose
             </div>
           </div>
           <p className="text-sm text-gray-500 mt-1">{item.cafe}</p>
-          <p className="text-2xl font-bold text-gray-900 my-4">₹ {item.price.toFixed(2)}</p>
+
+          <div className="flex items-center justify-between my-4">
+            <p className="text-2xl font-bold text-gray-900">₹ {(item.price * quantity).toFixed(2)}</p>
+            <div className="flex items-center space-x-2 bg-gray-100 rounded-full p-1">
+                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-full bg-white text-orange-500 text-2xl font-bold flex items-center justify-center shadow transition-transform active:scale-95">-</button>
+                <span className="text-xl font-bold w-8 text-center tabular-nums">{quantity}</span>
+                <button onClick={() => setQuantity(q => q + 1)} className="w-8 h-8 rounded-full bg-white text-orange-500 text-2xl font-bold flex items-center justify-center shadow transition-transform active:scale-95">+</button>
+            </div>
+          </div>
+          
           <button 
-            onClick={() => onAddToCart(item)}
+            onClick={() => onAddToCart(item, quantity)}
             className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-orange-600 transition-colors"
           >
-            Add to Cart
+            Add {quantity} to Cart
           </button>
         </div>
       </div>

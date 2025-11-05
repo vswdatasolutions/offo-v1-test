@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Screen } from '../App';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import OTPInput from '../components/OTPInput';
@@ -14,6 +14,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [showOtp, setShowOtp] = useState(false);
+  const [countdown, setCountdown] = useState(30);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+
+  useEffect(() => {
+    let timer: number;
+    if (isTimerActive && countdown > 0) {
+      timer = window.setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (countdown === 0) {
+      setIsTimerActive(false);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown, isTimerActive]);
 
   const isButtonDisabled = activeTab === 'login'
     ? phone.length < 10
@@ -21,6 +33,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
 
   const handleGetOtp = () => {
     setShowOtp(true);
+    setCountdown(30);
+    setIsTimerActive(true);
+  };
+  
+  const handleResendOtp = () => {
+    if (!isTimerActive) {
+      setCountdown(30);
+      setIsTimerActive(true);
+    }
   };
 
   return (
@@ -35,7 +56,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
             <h1 className="text-3xl font-bold text-white mb-2 text-center">Welcome!</h1>
             <p className="text-center text-white/80 mb-4">Login or Sign up to continue</p>
             <img 
-                src="../assets/food items/food6.jpg" 
+                src="https://storage.googleapis.com/aichat-previews/46eb2497-658b-49e0-8451-2487a6105423/K1L4YpE.png" 
                 alt="Food ordering illustration" 
                 className="w-48 h-48 mx-auto mb-4 object-contain"
             />
@@ -109,7 +130,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
                     </div>
                     <OTPInput onVerify={onLoginSuccess} />
                     <div className="text-center text-sm text-gray-500 mt-4">
-                      <p>Didn't get otp? <a href="#" className="font-medium text-orange-600 hover:text-orange-500">Resend OTP: 00:31 sec</a></p>
+                      <p>Didn't get otp?{' '}
+                        {isTimerActive ? (
+                          <span className="text-gray-400">
+                            Resend OTP in: 00:{countdown.toString().padStart(2, '0')}
+                          </span>
+                        ) : (
+                          <button onClick={handleResendOtp} className="font-medium text-orange-600 hover:text-orange-500 focus:outline-none">
+                            Resend OTP
+                          </button>
+                        )}
+                      </p>
                     </div>
                   </>
                 )}
