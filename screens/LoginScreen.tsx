@@ -56,7 +56,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
             <h1 className="text-3xl font-bold text-white mb-2 text-center">Welcome!</h1>
             <p className="text-center text-white/80 mb-4">Login or Sign up to continue</p>
             <img 
-                src="../assets/food items/food6.jpg" 
+                src="../../assets/food items/food6.jpg" 
                 alt="Food ordering illustration" 
                 className="w-48 h-48 mx-auto mb-4 object-contain"
             />
