@@ -28,8 +28,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
   }, [countdown, isTimerActive]);
 
   const isButtonDisabled = activeTab === 'login'
-    ? phone.length < 10
-    : phone.length < 10 || !firstName || !lastName;
+    ? phone.length !== 10
+    : phone.length !== 10 || !firstName || !lastName;
 
   const handleGetOtp = () => {
     setShowOtp(true);
@@ -100,13 +100,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
                     )}
 
                     <div className="mb-4">
-                    <input
-                        type="tel"
-                        placeholder="Enter phone number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full p-3 bg-gray-100 rounded-lg"
-                    />
+                      <div className="flex items-center w-full p-3 bg-gray-100 rounded-lg">
+                        <span className="text-gray-500 font-semibold pr-2 border-r border-gray-300">+91</span>
+                        <input
+                          type="tel"
+                          placeholder="9876543210"
+                          value={phone}
+                          maxLength={10}
+                          onChange={(e) => {
+                            const { value } = e.target;
+                            // Allow only numeric characters
+                            if (/^\d*$/.test(value)) {
+                              setPhone(value);
+                            }
+                          }}
+                          className="w-full bg-transparent pl-2 focus:outline-none text-gray-800"
+                        />
+                      </div>
                     </div>
                     <button
                     onClick={handleGetOtp}

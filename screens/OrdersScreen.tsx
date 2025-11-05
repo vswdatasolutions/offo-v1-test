@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Screen } from '../App';
 import BottomNav from '../components/BottomNav';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
@@ -41,9 +41,36 @@ const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
 };
 
 const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrders, onEditSchedule, onEditOrderItems }) => {
-  const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('ongoing');
+  const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('scheduled');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      let hasUpdates = false;
+
+      const updatedOrders = orders.map(order => {
+        const timeSincePlaced = now - new Date(order.placedAt).getTime();
+
+        if (order.status === 'Preparing' && timeSincePlaced > 2 * 60 * 1000) { // 2 minutes
+          hasUpdates = true;
+          return { ...order, status: 'Ready for Pickup' as const };
+        }
+        if (order.status === 'Ready for Pickup' && timeSincePlaced > 5 * 60 * 1000) { // 5 minutes
+          hasUpdates = true;
+          return { ...order, status: 'Out for Delivery' as const };
+        }
+        return order;
+      });
+
+      if (hasUpdates) {
+        setOrders(updatedOrders);
+      }
+    }, 15000); // Check every 15 seconds for updates
+
+    return () => clearInterval(interval);
+  }, [orders, setOrders]);
 
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrderId(prevId => (prevId === orderId ? null : orderId));
@@ -162,7 +189,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                 </div>
               </div>
         
-              <div className="border-t mt-3 pt-3 flex justify-end space-x-3">
+              <div className="border-t mt-3 pt-3 flex justify-between items-center flex-wrap gap-2">
                  <button 
                    onClick={() => toggleOrderDetails(order.id)}
                    className="text-sm font-semibold text-gray-600 px-4 py-2 rounded-lg border hover:bg-gray-50 flex items-center"
@@ -172,35 +199,37 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                  </button>
-                 {order.status === 'Scheduled' && (
-                    <>
-                      <button 
-                          onClick={() => onEditSchedule(order)}
-                          className="text-sm font-semibold text-blue-600 bg-blue-100 px-4 py-2 rounded-lg hover:bg-blue-200"
-                      >
-                          Edit Schedule
-                      </button>
-                      <button 
-                          onClick={() => onEditOrderItems(order)}
-                          className="text-sm font-semibold text-green-600 bg-green-100 px-4 py-2 rounded-lg hover:bg-green-200"
-                      >
-                          Edit Items
-                      </button>
-                    </>
-                 )}
-                 {isCancellable && (
-                    <button 
-                        onClick={() => handleCancelClick(order.id)}
-                        className="text-sm font-semibold text-red-600 bg-red-100 px-4 py-2 rounded-lg hover:bg-red-200"
-                    >
-                        Cancel Order
-                    </button>
-                 )}
-                 {order.status === 'Delivered' && (
-                    <button className="text-sm font-semibold text-orange-600 bg-orange-100 px-4 py-2 rounded-lg hover:bg-orange-200">
-                        Reorder
-                    </button>
-                 )}
+                 <div className="flex items-center flex-wrap justify-end gap-2">
+                     {order.status === 'Scheduled' && (
+                        <>
+                          <button 
+                              onClick={() => onEditSchedule(order)}
+                              className="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-2 rounded-lg hover:bg-blue-200"
+                          >
+                              Edit Schedule
+                          </button>
+                          <button 
+                              onClick={() => onEditOrderItems(order)}
+                              className="text-sm font-semibold text-green-600 bg-green-100 px-3 py-2 rounded-lg hover:bg-green-200"
+                          >
+                              Edit Items
+                          </button>
+                        </>
+                     )}
+                     {isCancellable && (
+                        <button 
+                            onClick={() => handleCancelClick(order.id)}
+                            className="text-sm font-semibold text-red-600 bg-red-100 px-3 py-2 rounded-lg hover:bg-red-200"
+                        >
+                            Cancel Order
+                        </button>
+                     )}
+                     {order.status === 'Delivered' && (
+                        <button className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-2 rounded-lg hover:bg-orange-200">
+                            Reorder
+                        </button>
+                     )}
+                 </div>
               </div>
             </div>
             );
