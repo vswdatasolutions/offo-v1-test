@@ -180,7 +180,12 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                       >
                           Edit Schedule
                       </button>
-                    
+                      <button 
+                          onClick={() => onEditOrderItems(order)}
+                          className="text-sm font-semibold text-green-600 bg-green-100 px-4 py-2 rounded-lg hover:bg-green-200"
+                      >
+                          Edit Items
+                      </button>
                     </>
                  )}
                  {isCancellable && (
