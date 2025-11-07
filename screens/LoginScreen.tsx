@@ -53,10 +53,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
       </div>
       <div className="flex-grow flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
-            <h1 className="text-3xl font-bold text-white mb-2 text-center">Welcome!</h1>
-            <p className="text-center text-white/80 mb-4">Login or Sign up to continue</p>
+            <h1 className="text-2xl font-bold text-white mb-2 text-center">Welcome!</h1>
+            <p className="text-center text-white/80 mb-4 text-base">Login or Sign up to continue</p>
             <img 
-                src="../../assets/food items/food6.jpg" 
+                src="../../assets/illustrations/office pic.png" 
                 alt="Food ordering illustration" 
                 className="w-48 h-48 mx-auto mb-4 object-contain"
             />
@@ -64,13 +64,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, navigateTo })
                 <div className="flex border-b border-gray-200 mb-6">
                     <button
                         onClick={() => { setActiveTab('login'); setShowOtp(false); }}
-                        className={`w-1/2 pb-3 text-center font-semibold text-lg transition-all duration-300 ${activeTab === 'login' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-400'}`}
+                        className={`w-1/2 pb-3 text-center font-semibold text-base transition-all duration-300 ${activeTab === 'login' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-400'}`}
                     >
                         Log In
                     </button>
                     <button
                         onClick={() => { setActiveTab('signup'); setShowOtp(false); }}
-                        className={`w-1/2 pb-3 text-center font-semibold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-400'}`}
+                        className={`w-1/2 pb-3 text-center font-semibold text-base transition-all duration-300 ${activeTab === 'signup' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-400'}`}
                     >
                         Sign-up
                     </button>

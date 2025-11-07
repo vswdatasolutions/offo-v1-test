@@ -18,30 +18,33 @@ const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
   const baseClasses = "text-xs font-semibold px-2.5 py-1 rounded-full";
   switch (status) {
     case 'Delivered':
-      return <span className={`${baseClasses} bg-gray-200 text-gray-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-gray-200 text-gray-800`}>Completed</span>;
     case 'Cancelled':
-      return <span className={`${baseClasses} bg-red-100 text-red-800`}>{status}</span>;
+    case 'Rejected':
+      return <span className={`${baseClasses} bg-gray-200 text-gray-800`}>{status}</span>;
     case 'Scheduled':
-      return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-orange-100 text-orange-800`}>{status}</span>;
+    case 'Accepted':
+      return <span className={`${baseClasses} bg-orange-100 text-orange-800 animate-pulse`}>{status}</span>;
     case 'Preparing':
       return <span className={`${baseClasses} bg-yellow-100 text-yellow-800 animate-pulse`}>{status}</span>;
     case 'Ready for Pickup':
-       return <span className={`${baseClasses} bg-green-100 text-green-800 relative flex items-center`}>
+       return <span className={`${baseClasses} bg-orange-100 text-orange-800 relative flex items-center`}>
           <span className="absolute -left-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
           </span>
           <span className="ml-3">{status}</span>
       </span>;
     case 'Out for Delivery':
-      return <span className={`${baseClasses} bg-indigo-100 text-indigo-800 animate-pulse`}>{status}</span>;
+      return <span className={`${baseClasses} bg-indigo-100 text-indigo-800 animate-pulse`}>Out for Pickup</span>;
     default:
       return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
   }
 };
 
 const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrders, onEditSchedule, onEditOrderItems }) => {
-  const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('scheduled');
+  const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('past');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
@@ -53,11 +56,15 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
       const updatedOrders = orders.map(order => {
         const timeSincePlaced = now - new Date(order.placedAt).getTime();
 
-        if (order.status === 'Preparing' && timeSincePlaced > 2 * 60 * 1000) { // 2 minutes
+        if (order.status === 'Accepted' && timeSincePlaced > 1 * 60 * 1000) { // 1 minute
+          hasUpdates = true;
+          return { ...order, status: 'Preparing' as const };
+        }
+        if (order.status === 'Preparing' && timeSincePlaced > 3 * 60 * 1000) { // 3 minutes total
           hasUpdates = true;
           return { ...order, status: 'Ready for Pickup' as const };
         }
-        if (order.status === 'Ready for Pickup' && timeSincePlaced > 5 * 60 * 1000) { // 5 minutes
+        if (order.status === 'Ready for Pickup' && timeSincePlaced > 5 * 60 * 1000) { // 5 minutes total
           hasUpdates = true;
           return { ...order, status: 'Out for Delivery' as const };
         }
@@ -91,8 +98,8 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
   };
 
   const scheduledOrders = orders.filter(o => o.status === 'Scheduled');
-  const ongoingOrders = orders.filter(o => ['Preparing', 'Ready for Pickup', 'Out for Delivery'].includes(o.status));
-  const pastOrders = orders.filter(o => o.status === 'Delivered' || o.status === 'Cancelled');
+  const ongoingOrders = orders.filter(o => ['Accepted', 'Preparing', 'Ready for Pickup', 'Out for Delivery'].includes(o.status));
+  const pastOrders = orders.filter(o => ['Delivered', 'Cancelled', 'Rejected'].includes(o.status));
 
   const ordersToDisplay = activeTab === 'scheduled'
       ? scheduledOrders
@@ -102,7 +109,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
 
 
   return (
-    <div className="flex flex-col h-full bg-[#FFF9F2] relative">
+    <div className="flex flex-col h-full bg-gray-100 relative">
       {orderToCancel && (
           <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-20" aria-modal="true" role="dialog">
             <div className="bg-white p-6 rounded-2xl shadow-xl text-center w-4/5">
@@ -110,7 +117,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                 <p className="text-gray-600 mb-6">Are you sure you want to cancel this order? This action cannot be undone.</p>
                 <div className="flex justify-center gap-4">
                     <button onClick={() => setOrderToCancel(null)} className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold">No, Keep It</button>
-                    <button onClick={confirmCancel} className="px-6 py-2 rounded-lg bg-red-500 text-white font-semibold">Yes, Cancel</button>
+                    <button onClick={confirmCancel} className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold">Yes, Cancel</button>
                 </div>
             </div>
         </div>
@@ -151,7 +158,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
       <ScrollableContainer className="p-4 space-y-4">
         {ordersToDisplay.length > 0 ? (
           ordersToDisplay.map(order => {
-            const isCancellable = (['Preparing', 'Scheduled'].includes(order.status) && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000);
+            const isCancellable = (['Accepted', 'Preparing', 'Scheduled'].includes(order.status) && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000);
             const formattedDate = order.date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
             
             return (
@@ -204,7 +211,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                         <>
                           <button 
                               onClick={() => onEditSchedule(order)}
-                              className="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-2 rounded-lg hover:bg-blue-200"
+                              className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-2 rounded-lg hover:bg-orange-200"
                           >
                               Edit Schedule
                           </button>
@@ -219,13 +226,13 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                      {isCancellable && (
                         <button 
                             onClick={() => handleCancelClick(order.id)}
-                            className="text-sm font-semibold text-red-600 bg-red-100 px-3 py-2 rounded-lg hover:bg-red-200"
+                            className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-2 rounded-lg hover:bg-orange-200"
                         >
                             Cancel Order
                         </button>
                      )}
                      {order.status === 'Delivered' && (
-                        <button className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-2 rounded-lg hover:bg-orange-200">
+                        <button className="text-sm font-semibold text-orange-500 bg-orange-500/20 px-3 py-2 rounded-lg hover:bg-orange-500/30">
                             Reorder
                         </button>
                      )}

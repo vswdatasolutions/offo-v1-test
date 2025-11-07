@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 
-const ITEM_HEIGHT = 40;
-const VISIBLE_ITEMS = 5;
+const ITEM_HEIGHT = 28;
+const VISIBLE_ITEMS = 3;
 const CONTAINER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 interface PickerColumnProps {
@@ -61,7 +61,7 @@ const PickerColumn: React.FC<PickerColumnProps> = ({ values, selectedValue, onSe
         {values.map((val) => (
           <div
             key={val}
-            className="flex items-center justify-center text-2xl text-white"
+            className="flex items-center justify-center text-lg text-white"
             style={{
               height: `${ITEM_HEIGHT}px`,
               scrollSnapAlign: 'center',
@@ -105,9 +105,10 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
     };
 
     return (
-        <div className="relative flex w-full justify-center bg-gray-800 rounded-xl" style={{ height: `${CONTAINER_HEIGHT}px` }}>
+        <div className="relative flex w-full justify-center bg-[#264653] rounded-xl" style={{ height: `${CONTAINER_HEIGHT}px` }}>
             <div 
-              className="absolute inset-x-2 top-1/2 h-10 bg-black/20 rounded-lg -translate-y-1/2 pointer-events-none" 
+              className="absolute inset-x-2 top-1/2 bg-white/10 rounded-lg -translate-y-1/2 pointer-events-none" 
+              style={{ height: `${ITEM_HEIGHT}px` }}
               aria-hidden="true"
             />
             <div 

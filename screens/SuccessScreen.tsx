@@ -48,10 +48,19 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ navigateTo, clearCart, or
     receiptContent += `\n---------------------\n`;
     receiptContent += `Subtotal: ₹${orderDetails.subtotal.toFixed(2)}\n`;
     receiptContent += `Convenience Fee: ₹${orderDetails.convenienceFee.toFixed(2)}\n`;
+
     if (orderDetails.schedules && orderDetails.schedules.length > 0) {
         const perOrderTotal = orderDetails.subtotal + orderDetails.convenienceFee;
         receiptContent += `Total per order: ₹${perOrderTotal.toFixed(2)}\n\n`;
         receiptContent += `GRAND TOTAL for ${orderDetails.schedules.length} orders: ₹${orderDetails.total.toFixed(2)}\n`;
+
+        const isPartialPayment = orderDetails.paymentOption === 'partial' && orderDetails.paymentAmount && orderDetails.paymentAmount < orderDetails.total;
+        if (isPartialPayment) {
+            receiptContent += `\nAmount Paid Today: ₹${orderDetails.paymentAmount.toFixed(2)}\n`;
+            const remaining = orderDetails.total - orderDetails.paymentAmount;
+            receiptContent += `Remaining Due: ₹${remaining.toFixed(2)}\n`;
+        }
+
     } else {
         receiptContent += `Total: ₹${orderDetails.total.toFixed(2)}\n`;
     }
@@ -74,7 +83,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ navigateTo, clearCart, or
       <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-green-500/30">
         <CheckIcon className="w-16 h-16 text-white"/>
       </div>
-      <h1 className="text-3xl font-bold mb-2">Success!</h1>
+      <h1 className="text-2xl font-bold mb-2">Success!</h1>
       <p className="text-gray-300 mb-8">
         Your order has been placed successfully.
       </p>

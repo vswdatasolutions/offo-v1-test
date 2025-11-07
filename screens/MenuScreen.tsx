@@ -1,19 +1,21 @@
-
 import React, { useState } from 'react';
 import type { Screen } from '../App';
 import type { CartItem, FoodItem, Cafe } from '../types';
 import { FOOD_ITEMS } from '../constants';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import CartIcon from '../components/icons/CartIcon';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface MenuScreenProps {
   cafe: Cafe;
   cart: CartItem[];
   navigateTo: (screen: Screen) => void;
   addToCart: (item: FoodItem) => void;
+  isEditingOrder?: boolean;
+  onCancelEdit?: () => void;
 }
 
-const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCart }) => {
+const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCart, isEditingOrder, onCancelEdit }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isVeg, setIsVeg] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -33,7 +35,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCa
     <div className="flex flex-col h-full bg-[#FFF9F2]">
       <header className="p-4 sticky top-0 bg-[#FFF9F2] z-10 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
-          <button onClick={() => navigateTo('home')}>
+          <button onClick={() => isEditingOrder && onCancelEdit ? onCancelEdit() : navigateTo('home')}>
             <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
           </button>
           <div className="relative">
@@ -49,7 +51,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCa
         </div>
         <div className="text-center">
             <div className="flex items-center justify-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-800">{cafe.name}</h1>
+                <h1 className="text-xl font-bold text-gray-800">{cafe.name}</h1>
                 <span className={`text-xs font-bold px-2 py-1 rounded-full text-white ${cafe.status === 'Open' ? 'bg-green-500' : 'bg-red-500'}`}>
                     {cafe.status}
                 </span>
@@ -90,7 +92,13 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCa
         </div>
       </header>
 
-      <main className="flex-grow overflow-y-auto p-4">
+      {isEditingOrder && (
+          <div className="bg-yellow-100 text-yellow-800 text-center p-2 text-sm font-semibold">
+              You are editing a scheduled order.
+          </div>
+      )}
+
+      <ScrollableContainer className="p-4">
         {cafe.status === 'Closed' && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4" role="alert">
                 <p className="font-bold">Cafe Closed</p>
@@ -120,7 +128,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCa
             </div>
           )}
         </div>
-      </main>
+      </ScrollableContainer>
       
       {cartItemCount > 0 && cafe.status === 'Open' && (
           <div className="p-4 bg-[#FFF9F2] border-t">

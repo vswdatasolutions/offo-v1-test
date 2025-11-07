@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Screen } from '../App';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface AboutScreenProps {
   navigateTo: (screen: Screen) => void;
@@ -34,7 +35,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ navigateTo }) => {
         <div className="w-1/5"></div>
       </header>
 
-      <main className="flex-grow overflow-y-auto p-6 space-y-8">
+      <ScrollableContainer className="p-6 space-y-8">
         <div className="text-center">
           <h2 className="text-5xl font-extrabold text-orange-500 tracking-wider">
             OFFO
@@ -44,7 +45,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ navigateTo }) => {
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border">
             <h3 className="font-bold text-lg text-gray-800 mb-3 text-center">Our Mission</h3>
-            <p className="text-center text-gray-600">
+            <p className="text-center text-gray-600 text-sm">
                 OFFO (Order Food From Office) is dedicated to revolutionizing the office cafeteria experience. We believe that getting a delicious, timely meal at work should be simple, fast, and hassle-free. Our platform connects you with your office cafeterias, allowing you to skip the queues and enjoy your breaks.
             </p>
         </div>
@@ -72,7 +73,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ navigateTo }) => {
             />
         </div>
 
-      </main>
+      </ScrollableContainer>
 
       <footer className="p-4 text-center text-gray-400 text-sm">
         <p>Version 1.0.0</p>

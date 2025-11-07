@@ -155,7 +155,9 @@ const CartScreen: React.FC<CartScreenProps> = ({ cart, updateCartQuantity, navig
             <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
             <div className="flex-grow ml-4">
               <p className="font-bold text-gray-800">{item.name}</p>
-              <button onClick={() => handleRemoveItem(item.id)} className="text-xs text-red-500">Remove</button>
+              <p className="text-xs text-gray-400">({item.cafe})</p>
+              {/* <button onClick={() => handleRemoveItem(item.id)} className="text-xs text-red-500">Remove</button> */}
+              
             </div>
             <div className="text-right">
                 <p className="font-semibold text-gray-800 mb-2">₹ {(item.price * quantity).toFixed(2)}</p>

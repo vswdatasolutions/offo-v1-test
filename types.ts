@@ -22,14 +22,21 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface ScheduledItem {
+    id: number;
+    date: Date;
+    time: string;
+}
+
 export interface OrderDetails {
   items: CartItem[];
   subtotal: number;
   convenienceFee: number;
   total: number;
-  scheduledTime?: string;
-  scheduledDate?: Date;
+  schedules?: ScheduledItem[];
   paymentMethod?: string;
+  paymentOption?: 'full' | 'partial';
+  paymentAmount?: number;
 }
 
 export interface OrderItem {
@@ -43,6 +50,6 @@ export interface Order {
     date: Date;
     items: OrderItem[];
     total: number;
-    status: 'Delivered' | 'Cancelled' | 'Preparing' | 'Ready for Pickup' | 'Scheduled' | 'Out for Delivery';
+    status: 'Delivered' | 'Cancelled' | 'Preparing' | 'Ready for Pickup' | 'Scheduled' | 'Out for Delivery' | 'Accepted' | 'Rejected';
     placedAt: Date;
 }

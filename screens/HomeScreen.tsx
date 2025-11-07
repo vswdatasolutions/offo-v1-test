@@ -136,7 +136,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
       <img src={item.image} alt={item.name} className="w-full h-24 rounded-lg object-cover mb-2"/>
       <div className="flex-grow">
         <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
-        <p className="text-xs text-gray-500">{item.cafe}</p>
+        <p className="text-xs text-gray-500">({item.cafe})</p>
       </div>
       <div className="flex justify-between items-center mt-2">
           <p className="text-sm font-semibold text-gray-800">₹{item.price.toFixed(2)}</p>
@@ -161,7 +161,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
           <div className="flex justify-between items-center">
             <div>
               <p className="text-xs text-gray-500">{location.company} {location.building}</p>
-              <h1 className="font-bold text-gray-800">Hey, Good morning!</h1>
+              <h1 className="font-bold text-xl text-gray-800">Hey, Good morning!</h1>
             </div>
             <div className="relative">
                <button onClick={() => navigateTo('cart')}>
@@ -175,7 +175,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
             </div>
           </div>
           <div className="mt-4 flex items-center justify-between">
-              <h2 className="font-bold text-lg text-gray-800">Discover tasty foods</h2>
+              <h2 className="font-semibold text-base text-gray-800">Discover tasty foods</h2>
               <div className="flex items-center space-x-2">
                   <span className={`font-medium ${!isVeg ? 'text-orange-500' : 'text-gray-400'}`}>Non-Veg</span>
                   <button onClick={() => setIsVeg(!isVeg)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isVeg ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -243,7 +243,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ location, cart, navigateTo, add
                   <span className={`h-3 w-3 mr-1.5 rounded-full border flex-shrink-0 ${item.isVeg ? 'bg-green-500 border-green-600' : 'bg-red-500 border-red-600'}`}></span>
                   <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{item.cafe}</p>
+                <p className="text-xs text-gray-500 truncate">({item.cafe})</p>
                 <p className="text-sm font-semibold text-gray-800 mt-2">₹{item.price.toFixed(2)}</p>
               </div>
               <div className="ml-2">

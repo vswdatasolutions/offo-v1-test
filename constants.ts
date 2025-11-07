@@ -33,7 +33,7 @@ export const ORDERS_DATA: Order[] = [
     {
         id: 'ODS56781',
         cafe: 'Cozy Corner',
-        date: getFutureDate(2), // Scheduled for 2 days from now
+        date: new Date(new Date().setDate(new Date().getDate() + 2)), // Scheduled for 2 days from now
         items: [
             { item: FOOD_ITEMS[8], quantity: 1 }, // Paneer Biryani
             { item: FOOD_ITEMS[2], quantity: 1 }, // Hot Coffee
@@ -50,7 +50,7 @@ export const ORDERS_DATA: Order[] = [
             { item: FOOD_ITEMS[2], quantity: 2 }, // Hot Coffee
         ],
         total: FOOD_ITEMS[2].price * 2,
-        status: 'Preparing',
+        status: 'Accepted',
         placedAt: new Date(Date.now() - 2 * 60 * 1000), // Placed 2 minutes ago
     },
     {
