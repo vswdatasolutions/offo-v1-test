@@ -6,7 +6,7 @@ interface OnboardingScreenProps {
 
 const onboardingSteps = [
   {
-    image: '../../assets/illustrations/.jpg',
+    image: '../../assets/illustrations/17177.jpg',
     title: 'Order from your work place',
     description: 'Pre-book your lunch, save your time - we\'ll have it ready when you are.',
   },
