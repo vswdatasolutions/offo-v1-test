@@ -80,9 +80,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
 
 
   return (
-    <div className="flex flex-col h-full bg-[#FFF9F2] overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-100">
       <div 
-        className="flex-grow flex flex-col items-center justify-center text-center"
+        className="flex-grow flex flex-col items-center justify-center text-center overflow-y-auto no-scrollbar py-4"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -91,22 +91,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
           style={{ transform: `translateX(-${step * 100}%)` }}
         >
           {onboardingSteps.map((currentStep, index) => (
-            <div key={index} className="w-full flex-shrink-0 px-8 flex flex-col items-center justify-center h-[450px]">
+            <div key={index} className="w-full flex-shrink-0 px-8 flex flex-col items-center justify-center">
               {index === onboardingSteps.length - 1 ? (
                 <>
                   <h2 className="text-5xl font-extrabold text-orange-500">OFFO</h2>
                   <p className="text-gray-500 text-lg mt-1 mb-6">Order Food From Office</p>
                   <img
-                    src="../../assets/illustrations/flash1.jpg"
+                    src="https://i.imgur.com/W2C007s.png"
                     alt="Colleagues ordering food in an office"
-                    className="w-full max-w-sm object-contain mb-8"
+                    className="w-full max-w-sm sm:max-w-md object-contain mb-8 max-h-60"
                   />
                 </>
               ) : (
                 <img
                   src={currentStep.image}
                   alt={currentStep.title}
-                  className="w-full max-w-xs h-60 object-cover rounded-lg mb-8"
+                  className="w-full max-w-xs sm:max-w-sm h-60 object-cover rounded-lg mb-8"
                 />
               )}
               <h1 className="text-xl font-bold text-gray-800 mb-2">{currentStep.title}</h1>
@@ -117,7 +117,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
       </div>
 
       {/* Controls and dots */}
-      <div className="p-8">
+      <div className="p-8 flex-shrink-0">
         <div className="flex justify-center items-center mb-6">
           {onboardingSteps.map((_, index) => (
             <button

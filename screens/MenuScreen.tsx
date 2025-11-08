@@ -131,12 +131,12 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ cafe, cart, navigateTo, addToCa
       </ScrollableContainer>
       
       {cartItemCount > 0 && cafe.status === 'Open' && (
-          <div className="p-4 bg-[#FFF9F2] border-t">
-               <div className="bg-orange-500 text-white rounded-lg shadow-lg flex justify-between items-center p-3">
+              <footer className="p-4 bg-gray-100 border-t flex-shrink-0">
+               <div className="bg-gray-800 text-white rounded-lg shadow-lg flex justify-between items-center p-3">
                   <p>{cartItemCount} items | ₹ {cart.reduce((acc, cv) => acc + cv.item.price * cv.quantity, 0).toFixed(2)}</p>
                   <button onClick={() => navigateTo('cart')} className="font-bold">View Cart &gt;</button>
               </div>
-          </div>
+          </footer>
       )}
     </div>
   );

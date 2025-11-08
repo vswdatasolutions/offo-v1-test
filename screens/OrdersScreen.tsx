@@ -155,7 +155,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
         </button>
       </div>
 
-      <ScrollableContainer className="p-4 space-y-4">
+      <ScrollableContainer className="p-4 space-y-4 pb-20">
         {ordersToDisplay.length > 0 ? (
           ordersToDisplay.map(order => {
             const isCancellable = (['Accepted', 'Preparing', 'Scheduled'].includes(order.status) && (new Date().getTime() - order.placedAt.getTime()) < 5 * 60 * 1000);

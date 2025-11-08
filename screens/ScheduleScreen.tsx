@@ -3,6 +3,7 @@ import type { Screen } from '../App';
 import type { OrderDetails, ScheduledItem, Order } from '../types';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import TimePicker from '../components/TimePicker';
+import ScrollableContainer from '../components/ScrollableContainer';
 
 interface ScheduleScreenProps {
   orderDetails: OrderDetails;
@@ -201,7 +202,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ orderDetails, setOrderD
                 {notification}
             </div>
       )}
-      <header className="p-4 flex items-center">
+      <header className="p-4 flex items-center flex-shrink-0">
         <button onClick={() => navigateTo(isEditMode ? 'orders' : 'cart')} className="p-2">
           <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
         </button>
