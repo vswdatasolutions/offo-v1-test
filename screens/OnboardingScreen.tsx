@@ -97,7 +97,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onGetStarted }) => 
                   <h2 className="text-5xl font-extrabold text-orange-500">OFFO</h2>
                   <p className="text-gray-500 text-lg mt-1 mb-6">Order Food From Office</p>
                   <img
-                    src="https://i.imgur.com/W2C007s.png"
+                    src="../../assets/illustrations/flash6.jpg"
                     alt="Colleagues ordering food in an office"
                     className="w-full max-w-sm sm:max-w-md object-contain mb-8 max-h-60"
                   />
