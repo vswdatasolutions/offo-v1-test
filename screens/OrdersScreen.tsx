@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { Screen } from '../App';
 import BottomNav from '../components/BottomNav';
@@ -45,7 +46,6 @@ const OrderStatusPill: React.FC<{ status: Order['status'] }> = ({ status }) => {
 
 const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrders, onEditSchedule, onEditOrderItems }) => {
   const [activeTab, setActiveTab] = useState<'scheduled' | 'ongoing' | 'past'>('past');
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,9 +79,6 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
     return () => clearInterval(interval);
   }, [orders, setOrders]);
 
-  const toggleOrderDetails = (orderId: string) => {
-    setExpandedOrderId(prevId => (prevId === orderId ? null : orderId));
-  };
   
   const handleCancelClick = (orderId: string) => {
     setOrderToCancel(orderId);
@@ -122,7 +119,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
             </div>
         </div>
       )}
-      <header className="p-4 flex items-center border-b">
+      <header className="p-4 flex items-center border-b flex-shrink-0">
         <div className="w-1/5">
             <button onClick={() => navigateTo('home')}>
                 <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
@@ -134,7 +131,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
         <div className="w-1/5"></div>
       </header>
       
-      <div className="flex border-b">
+      <div className="flex border-b flex-shrink-0">
         <button
           onClick={() => setActiveTab('scheduled')}
           className={`w-1/3 py-3 text-center font-semibold transition-colors ${activeTab === 'scheduled' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
@@ -182,7 +179,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
                   <p className="text-xs text-gray-500">{order.items.reduce((sum, i) => sum + i.quantity, 0)} items</p>
               </div>
               
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedOrderId === order.id ? 'max-h-96 mt-3' : 'max-h-0'}`}>
+              <div className="mt-3"> {/* Order items are now always visible */}
                 <div className="border-t pt-3">
                     <h4 className="font-semibold text-sm mb-2 text-gray-700">Order Items</h4>
                     <ul className="space-y-1 text-sm text-gray-600">
@@ -197,15 +194,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = ({ navigateTo, orders, setOrde
               </div>
         
               <div className="border-t mt-3 pt-3 flex justify-between items-center flex-wrap gap-2">
-                 <button 
-                   onClick={() => toggleOrderDetails(order.id)}
-                   className="text-sm font-semibold text-gray-600 px-4 py-2 rounded-lg border hover:bg-gray-50 flex items-center"
-                 >
-                    {expandedOrderId === order.id ? 'Hide Details' : 'View Details'}
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 ml-2 transition-transform ${expandedOrderId === order.id ? 'transform rotate-180' : ''}`}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                 </button>
+                 {/* Removed View Details / Hide Details button */}
                  <div className="flex items-center flex-wrap justify-end gap-2">
                      {order.status === 'Scheduled' && (
                         <>
